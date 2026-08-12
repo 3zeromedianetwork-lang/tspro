@@ -126,7 +126,9 @@ if (!$html || strlen($html) < 100) {
 
 libxml_use_internal_errors(true);
 $dom = new DOMDocument();
-$dom->loadHTML(mb_convert_encoding($html, 'HTML-ENTITIES', 'UTF-8'));
+// Prepend XML encoding tag to ensure UTF-8 parsing without deprecated mb_convert_encoding
+$html_utf8 = '<?xml encoding="UTF-8">' . $html;
+@$dom->loadHTML($html_utf8, LIBXML_NOERROR | LIBXML_NOWARNING);
 
 $data = [
     'title' => '',

@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AnyLink Video Downloader | Free & Universal</title>
+  <meta name="description" content="Download videos from YouTube, TikTok, Instagram, Facebook, Twitter, and 100+ platforms. No API key required." />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="anylink-downloader.css" />
+</head>
+<body>
+
+  <div class="bg-effects">
+    <div class="bg-orb bg-orb-1"></div>
+    <div class="bg-orb bg-orb-2"></div>
+    <div class="bg-orb bg-orb-3"></div>
+    <div class="bg-grid"></div>
+  </div>
+
+  <div class="app-wrapper">
+    <header class="hero-section" id="hero">
+      <div class="hero-badge">
+        <span class="badge-dot"></span>
+        Free & No API Key Required
+      </div>
+      <h1 class="hero-title">
+        <span class="title-gradient">AnyLink</span>
+        <span class="title-accent">Video Downloader</span>
+      </h1>
+      <p class="hero-subtitle">Download videos from YouTube, TikTok, Instagram, Facebook, Twitter & 100+ platforms</p>
+
+      <div class="search-container" id="search-container">
+        <div class="search-icon">
+          <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        </div>
+        <input type="text" id="anylink-url-input" class="search-input" placeholder="Paste any video link here..." autocomplete="off" />
+        <div class="search-actions">
+          <button id="anylink-paste-btn" class="action-btn paste-btn" title="Paste"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="9" height="9" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+          <button id="anylink-fetch-btn" class="action-btn fetch-btn" title="Fetch"><svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></button>
+        </div>
+      </div>
+
+      <div class="platform-badge" id="platform-badge" style="display:none;">
+        <span id="platform-icon"></span>
+        <span id="platform-name"></span>
+      </div>
+
+      <div class="cookie-section">
+        <button class="cookie-toggle-btn" id="anylink-cookie-toggle-btn">
+          <span id="anylink-cookie-status-icon">🔧</span>
+          <span id="anylink-cookie-status-text">Optional: Add Cookies for Restricted Videos</span>
+        </button>
+        <div class="cookie-panel" id="anylink-cookie-panel" style="display:none;">
+          <div class="cookie-instructions">
+            <p><strong>Some platforms require login.</strong> Paste cookies to access restricted videos.</p>
+            <p>How: Login → F12 → Console → <code>document.cookie</code> → Paste below</p>
+          </div>
+          <textarea id="anylink-cookie-input" class="cookie-textarea" placeholder="Paste cookies here..."></textarea>
+          <button class="cookie-save-btn" id="anylink-cookie-save-btn">🍪 Save Cookies</button>
+        </div>
+      </div>
+    </header>
+
+    <div class="loading-section" id="anylink-loading-section" style="display: none;">
+      <div class="loader-ring"><div class="loader-ring-inner"></div></div>
+      <p class="loading-text" id="anylink-loading-text">Analyzing video link...</p>
+      <div class="loading-steps" id="anylink-loading-steps">
+        <div class="step active">🔍 Detecting platform</div>
+        <div class="step">⬇️ Fetching video</div>
+        <div class="step">✅ Preparing download</div>
+      </div>
+    </div>
+
+    <div class="error-section" id="anylink-error-section" style="display: none;">
+      <div class="error-card">
+        <div class="error-icon">⚠️</div>
+        <p id="anylink-error-message"></p>
+        <button class="retry-btn" id="anylink-retry-btn">🔄 Try Again</button>
+      </div>
+    </div>
+
+    <div class="results-section" id="anylink-results-section" style="display: none;">
+      <div class="meta-card" id="anylink-meta-card">
+        <div class="meta-thumbnail"><img src="" id="anylink-meta-img" /><div class="meta-type-badge" id="anylink-meta-badge">VIDEO</div></div>
+        <div class="meta-info">
+          <h2 class="meta-title" id="anylink-meta-title"></h2>
+          <p class="meta-description" id="anylink-meta-description"></p>
+          <div class="meta-source"><span id="anylink-meta-source"></span></div>
+        </div>
+      </div>
+
+      <div class="video-results" id="anylink-video-results">
+        <h3 class="section-heading">🎬 Download Video</h3>
+        <div class="download-cards">
+          <div class="download-card" id="anylink-hd-card" style="display: none;">
+            <div class="download-info"><h4>High Quality</h4><p id="anylink-hd-quality"></p></div>
+            <a href="#" id="anylink-hd-download" class="download-btn hd-btn">⬇️ HD</a>
+          </div>
+          <div class="download-card" id="anylink-sd-card" style="display: none;">
+            <div class="download-info"><h4>Standard Quality</h4><p id="anylink-sd-quality"></p></div>
+            <a href="#" id="anylink-sd-download" class="download-btn sd-btn">⬇️ SD</a>
+          </div>
+        </div>
+        <div class="video-preview" id="anylink-video-preview" style="display: none;">
+          <video id="anylink-video-player" controls><source id="anylink-video-source" src=""></video>
+        </div>
+      </div>
+
+      <div class="raw-data-section">
+        <button class="toggle-raw-btn" id="anylink-toggle-raw-btn">View Raw JSON Data</button>
+        <pre class="raw-json" id="anylink-raw-json" style="display: none;"></pre>
+      </div>
+    </div>
+
+    <section class="how-it-works">
+      <div class="steps-grid">
+        <div class="step-card"><h3>01 Paste URL</h3><p>Copy and paste any video link</p></div>
+        <div class="step-card"><h3>02 Detect</h3><p>We identify the platform automatically</p></div>
+        <div class="step-card"><h3>03 Download</h3><p>Get your video in HD or SD</p></div>
+      </div>
+    </section>
+
+    <footer class="app-footer">
+      <p>AnyLink Video Downloader • Supports 100+ Platforms • No API Key Required</p>
+    </footer>
+  </div>
+
+  <div class="toast" id="anylink-toast"><span id="anylink-toast-message"></span></div>
+
+  <script src="anylink-downloader.js"></script>
+</body>
+</html>

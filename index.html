@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NewsFlash Pro | SaaS News Card Editor</title>
+  <link rel="stylesheet" href="./style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/interactjs/dist/interact.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <!-- Cropper.js -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js"></script>
+</head>
+<body>
+  <div id="loader">
+    <div class="spinner"></div>
+    <p>Processing News...</p>
+  </div>
+
+  <div class="app-container">
+    <!-- LEFT SIDEBAR: Extraction & AI Tools -->
+    <aside class="sidebar">
+      <div class="logo-container">
+        <h1>NewsFlash Pro</h1>
+      </div>
+
+      <!-- VOICE CONTROL -->
+      <div class="sidebar-section voice-panel">
+        <span class="section-title">🎙️ Voice Control</span>
+        <div style="display: flex; gap: 0.5rem; align-items: center;">
+          <button type="button" id="voice-btn" class="btn-secondary" style="flex: 1; display: flex; align-items: center; justify-content: center; gap: 0.5rem;">
+            <span id="voice-icon">🎤</span> <span id="voice-status">Start Listening</span>
+          </button>
+          <div id="voice-indicator" class="pulse-ring" style="display: none;"></div>
+        </div>
+      </div>
+
+      <div class="sidebar-section">
+        <span class="section-title">1. News Extraction</span>
+        <div style="display: flex; gap: 0.5rem; margin-bottom: 0.5rem;">
+          <input type="text" id="news-url" class="input-minimal" placeholder="Paste news link..." style="flex: 1;" />
+          <button type="button" id="extract-btn" class="btn-primary" style="padding: 0.5rem 1rem;">Go</button>
+        </div>
+        
+        <!-- MONITORED WEBSITES -->
+        <button type="button" id="toggle-websites-btn" class="btn-minimal" style="width: 100%; text-align: left; font-size: 0.75rem; color: #8b5cf6;">📁 Manage Monitored Sites (10)</button>
+        <div id="monitored-sites-panel" style="display: none; margin-top: 0.5rem;">
+          <div id="sites-list" style="max-height: 150px; overflow-y: auto; margin-bottom: 0.5rem;"></div>
+          <div style="display: flex; gap: 0.2rem;">
+            <input type="text" id="site-nickname" class="input-minimal" placeholder="Name" style="width: 35%; font-size: 0.7rem;" />
+            <input type="text" id="site-url" class="input-minimal" placeholder="URL" style="flex: 1; font-size: 0.7rem;" />
+            <button type="button" id="add-site-btn" class="btn-secondary" style="padding: 2px 8px;">+</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="sidebar-section">
+        <span class="section-title">Video Downloader (AnyLink)</span>
+        <div style="display: flex; gap: 0.5rem; margin-bottom: 0.5rem;">
+          <input type="text" id="video-dl-url" class="input-minimal" placeholder="Any video link..." style="flex: 1;" />
+          <button type="button" id="video-dl-btn" class="btn-primary" style="padding: 0.5rem 1rem; background: #e11d48; border-color: #e11d48;">⬇️</button>
+        </div>
+        <div id="video-dl-status" style="font-size: 0.7rem; color: #94a3b8; margin-top: 4px;"></div>
+      </div>
+
+      <div class="sidebar-section">
+        <span class="section-title">2. News Status (Pending Queue)</span>
+        <div id="auto-posts-list" class="status-box" style="max-height: 200px; overflow-y: auto; font-size: 0.75rem; border: 1px solid #334155; background: rgba(0,0,0,0.2); border-radius: 8px; padding: 10px;">
+          <p style="opacity: 0.5; text-align: center;">No news items in queue.</p>
+        </div>
+        <div style="display: flex; gap: 0.5rem; margin-top: 0.5rem;">
+          <button type="button" id="sync-all-btn" class="btn-secondary" style="flex: 1; font-size: 0.75rem;">🔄 Sync All</button>
+          <button type="button" id="start-workflow-btn" class="btn-primary" style="flex: 1.5; font-size: 0.75rem; background: #8b5cf6;">▶️ Start Workflow</button>
+        </div>
+        <div id="workflow-progress" style="margin-top: 0.5rem; font-size: 0.7rem; color: #10b981; display: none; text-align: center;">
+          Processing: <span id="current-post-name">None</span>
+        </div>
+      </div>
+
+      <div class="sidebar-section">
+        <span class="section-title">3. Manual & AI Creation</span>
+        <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+            <div style="display: flex; gap: 0.5rem; justify-content: center; margin-bottom: 0.5rem;">
+              <button id="undo-btn" class="btn-minimal" style="flex: 1; padding: 0.25rem 0.75rem; font-size: 0.9rem; color: #94a3b8; background: #1e293b; border-radius: 4px;" title="Undo (Ctrl+Z)">Undo</button>
+              <button id="redo-btn" class="btn-minimal" style="flex: 1; padding: 0.25rem 0.75rem; font-size: 0.9rem; color: #94a3b8; background: #1e293b; border-radius: 4px;" title="Redo (Ctrl+Y)">Redo</button>
+            </div>
+          <label for="manual-img-upload" class="btn-secondary" style="width: 100%; cursor: pointer; text-align: center;">🖼️ Upload News Photo</label>
+          <input type="file" id="manual-img-upload" accept="image/*" class="visually-hidden" />
+          
+          <div style="display: flex; gap: 0.5rem;">
+            <label for="template-img-upload" class="btn-primary" style="flex: 2; cursor: pointer; text-align: center; display: flex; align-items: center; justify-content: center; background: #8b5cf6; border-color: #8b5cf6;">Upload Design Template</label>
+            <button type="button" id="adjust-template-btn" class="btn-primary" style="flex: 1; background: #3b82f6; border-color: #3b82f6; padding: 0.5rem; font-size: 0.75rem; display: block;" title="Adjust Background">Adjust</button>
+            <button type="button" id="clear-template-btn" class="btn-minimal" style="flex: 1; padding: 0.5rem; font-size: 0.75rem;" title="Clear Background">❌</button>
+          </div>
+          <input type="file" id="template-img-upload" accept="image/*" class="visually-hidden" />
+
+          <label for="manual-video-upload" class="btn-primary" style="width: 100%; background: #3b82f6; border-color: #3b82f6; cursor: pointer; text-align: center; display: flex; align-items: center; justify-content: center; margin-top: 0.5rem;">🎞️ Upload News Video</label>
+          <input type="file" id="manual-video-upload" accept="video/*" class="visually-hidden" />
+        </div>
+      </div>
+
+      <!-- AI & CONTENT EDITOR -->
+      <div class="sidebar-section">
+        <span class="section-title">3. AI Optimization</span>
+        <div style="display: flex; gap: 0.5rem;">
+          <select id="target-lang" class="input-minimal" style="flex: 1;">
+            <option value="Tamil">Tamil</option>
+            <option value="English">English</option>
+            <option value="Sinhala">Sinhala</option>
+          </select>
+          <button type="button" id="translate-all-btn" class="btn-secondary" title="Translate All">🌐</button>
+        </div>
+        <button type="button" id="ai-rewrite-btn" class="btn-secondary">✨ AI Smart Rewrite</button>
+      </div>
+
+      <div class="sidebar-section">
+        <span class="section-title">4. Content Editor</span>
+        <textarea id="content-editor" class="input-minimal" placeholder="News content..."></textarea>
+      </div>
+
+      <div id="extraction-results" style="display: none;">
+        <div class="sidebar-section">
+          <span class="section-title">5. Extracted Images</span>
+          <div id="image-grid" class="image-grid"></div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- CENTRAL WORKSPACE: News Card Canvas -->
+    <main class="workspace">
+      
+      <!-- WORKSPACE MODE TOGGLE -->
+      <div class="workspace-mode-toggle" style="display: none; gap: 10px; margin-bottom: 20px; justify-content: center;">
+        <button id="mode-poster-btn" class="btn-primary" style="background: #8b5cf6;">🖼️ Poster Mode</button>
+        <button id="mode-video-btn" class="btn-secondary">🎬 Video Editor</button>
+      </div>
+        <!-- POSTER WORKSPACE (Existing) -->
+      <div id="news-card" class="news-card">
+        <img id="card-template-img" class="card-template-drag" src="" style="display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; z-index: 0;" />
+        <div class="card-image-container" id="card-image-box" style="z-index: 1;">
+          <img id="card-img" src="" alt="" style="display: none;" />
+          <div id="poster-video-wrapper" class="poster-video-wrapper" style="display: none;">
+            <video id="card-video" crossorigin="anonymous" autoplay muted loop playsinline></video>
+            <div class="poster-video-frame"></div>
+          </div>
+          <div id="play-overlay" class="play-button-overlay" style="display: none;">▶</div>
+          <div class="card-logo" id="card-logo-drag" style="display: none;">
+            <img src="" id="main-logo" style="width: 100%; height: auto; object-fit: contain;" />
+          </div>
+          <div class="card-date" id="card-date-drag">25.04.2026</div>
+          <div class="card-badge" id="card-badge-drag">LOCAL NEWS</div>
+          <div id="card-watermark-drag" class="card-watermark" style="display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-30deg); font-size: 3rem; color: rgba(0,0,0,0.1); font-weight: 900; z-index: 10; pointer-events: none; white-space: nowrap;">NEWSFLASH PRO</div>
+        </div>
+        
+        <div class="card-content-area" id="card-content-drag">
+          <div class="headline-line" id="card-h1">YOUR HEADLINE HERE</div>
+        </div>
+
+        <div class="card-footer">
+          <div class="footer-item">
+            <div class="footer-icon">🌐</div>
+            <div class="footer-text">
+              <span>More Information</span>
+              <strong id="footer-web">www.3zeronetwork.com</strong>
+            </div>
+          </div>
+          <div class="footer-item">
+            <div class="footer-icon">📞</div>
+            <div class="footer-text" style="text-align: right;">
+              <span>Contact Us</span>
+              <strong id="footer-phone">076571331</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- VIDEO WORKSPACE (New) -->
+      <div id="video-workspace" style="display: none !important; width: 100%; max-width: 800px; height: 75vh; margin: 0 auto; flex-direction: column; gap: 20px;">
+        <!-- Video Preview Canvas Wrapper to constrain height -->
+        <div style="flex: 1; display: flex; justify-content: center; min-height: 0;">
+          <div id="video-editor-canvas" style="position: relative; height: 100%; max-width: 100%; aspect-ratio: 16/9; background: #000; border-radius: 8px; overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.5);">
+          <!-- Base Video Wrapper (Draggable and resizable) -->
+          <div id="editor-video-wrapper" class="draggable-video" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1;">
+            
+            <!-- Invisible Drag Overlay (Covers everything except bottom controls) -->
+            <div class="video-drag-handle" style="position: absolute; top: 0; left: 0; width: 100%; height: calc(100% - 60px); cursor: move; z-index: 10;" title="Click anywhere here to drag. Scroll to zoom."></div>
+            
+            <video id="editor-base-video" style="width: 100%; height: 100%; object-fit: cover; pointer-events: auto;" crossorigin="anonymous" playsinline controls></video>
+          </div>
+          
+          <!-- Overlays Container -->
+          <div id="video-overlays" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 10;">
+            <div id="video-card-overlay" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; display: none;"></div>
+            <!-- Overlays will be injected here, but pointer-events: auto for interact.js -->
+          </div>
+          
+          <!-- Empty State / Upload Prompt -->
+          <div id="video-editor-empty-state" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; background: rgba(0,0,0,0.8); z-index: 10;">
+             <p style="color: #94a3b8; margin-bottom: 15px;">No video loaded in editor</p>
+             <label for="editor-video-upload" class="btn-primary" style="cursor: pointer; background: #3b82f6;">🎬 Upload Editor Video</label>
+             <input type="file" id="editor-video-upload" accept="video/*" class="visually-hidden" />
+          </div>
+        </div>
+        </div> <!-- End of Wrapper -->
+
+        <!-- Basic Timeline UI -->
+        <div class="video-timeline" style="background: rgba(15, 23, 42, 0.8); border: 1px solid #334155; border-radius: 8px; padding: 15px;">
+          <h4 style="margin-top: 0; margin-bottom: 10px; font-size: 0.9rem; color: #94a3b8;">Timeline Tracks</h4>
+          
+          <div class="timeline-track" style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+            <div style="width: 80px; font-size: 0.75rem; color: #64748b;">Text/Overlays</div>
+            <div style="flex: 1; height: 30px; background: rgba(0,0,0,0.3); border-radius: 4px; position: relative;">
+              <!-- Example block -->
+              <div style="position: absolute; left: 10%; width: 40%; height: 100%; background: rgba(139, 92, 246, 0.5); border: 1px solid #8b5cf6; border-radius: 4px; font-size: 0.65rem; display: flex; align-items: center; justify-content: center;">Lower Third</div>
+            </div>
+          </div>
+          
+          <div class="timeline-track" style="display: flex; align-items: center; gap: 10px;">
+            <div style="width: 80px; font-size: 0.75rem; color: #64748b;">Main Video</div>
+            <div style="flex: 1; height: 40px; background: rgba(0,0,0,0.3); border-radius: 4px; position: relative;">
+               <div style="position: absolute; left: 0; width: 100%; height: 100%; background: rgba(59, 130, 246, 0.5); border: 1px solid #3b82f6; border-radius: 4px; font-size: 0.75rem; display: flex; align-items: center; justify-content: center;">Video Clip</div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Advanced Controls -->
+        <div style="display: flex; flex-direction: column; gap: 15px; background: rgba(15, 23, 42, 0.8); border: 1px solid #334155; border-radius: 8px; padding: 15px;">
+           <div style="display: flex; flex-wrap: wrap; gap: 15px; align-items: center; justify-content: space-between;">
+             
+             <!-- Overlays & Settings -->
+             <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+               <select id="video-size-preset" class="form-select form-select-sm" style="width: auto;">
+                 <option value="landscape">Landscape (16:9)</option>
+                 <option value="portrait" selected>Portrait (4:5)</option>
+                 <option value="square">Square (1:1)</option>
+                 <option value="story">Story (9:16)</option>
+               </select>
+               <button id="add-lower-third-btn" class="btn-secondary">➕ Lower Third</button>
+               <label for="video-image-upload" class="btn-secondary" style="cursor: pointer; margin: 0;">🖼️ Add Image</label>
+               <input type="file" id="video-image-upload" accept="image/*" class="visually-hidden" multiple />
+               <label for="video-logo-upload" class="btn-secondary" style="cursor: pointer; margin: 0;">🌟 Logo</label>
+               <input type="file" id="video-logo-upload" accept="image/*" class="visually-hidden" />
+               <button id="reset-video-btn" class="btn-secondary" style="background: rgba(220, 38, 38, 0.2); border: 1px solid rgba(220, 38, 38, 0.5); color: #fca5a5;">🔄 Reset Video</button>
+               <button id="toggle-poster-frame-btn" class="btn-secondary" style="background: rgba(139, 92, 246, 0.2); border: 1px solid rgba(139, 92, 246, 0.5); color: #c084fc;">🖼️ Apply Poster Frame</button>
+             </div>
+
+             <!-- Action -->
+             <button id="export-video-project-btn" class="btn-primary" style="background: #10b981;">💾 Export Video</button>
+           </div>
+           
+           <hr style="border: 0; border-top: 1px solid #334155; margin: 0;">
+
+           <!-- Media Controls -->
+           <div style="display: flex; gap: 15px; align-items: center; flex-wrap: wrap;">
+              <div style="display: flex; align-items: center; gap: 5px;">
+                <label style="color: #cbd5e1; font-size: 14px;">Trim Start:</label>
+                <input type="number" id="trim-start" class="input-minimal" style="width: 70px; padding: 5px;" min="0" placeholder="0s">
+              </div>
+              <div style="display: flex; align-items: center; gap: 5px;">
+                <label style="color: #cbd5e1; font-size: 14px;">Trim End:</label>
+                <input type="number" id="trim-end" class="input-minimal" style="width: 70px; padding: 5px;" min="0" placeholder="0s">
+              </div>
+
+              <div style="display: flex; align-items: center; gap: 5px; margin-left: 10px;">
+                <input type="checkbox" id="mute-video" style="cursor: pointer;">
+                <label for="mute-video" style="color: #cbd5e1; font-size: 14px; cursor: pointer;">Mute Original</label>
+              </div>
+
+              <div style="display: flex; align-items: center; gap: 5px; margin-left: 10px;">
+                <label for="video-music-upload" class="btn-secondary" style="cursor: pointer; margin: 0; padding: 5px 10px; font-size: 13px;">🎵 Add Music</label>
+                <input type="file" id="video-music-upload" accept="audio/mp3,audio/wav" class="visually-hidden" />
+                <span id="music-file-name" style="color: #94a3b8; font-size: 12px; display: none;">None</span>
+              </div>
+           </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- RIGHT SIDEBAR: Styling Toolbox -->
+    <aside class="toolbox">
+      <span class="section-title">Design Controls</span>
+
+            <div class="sidebar-section">
+        <label class="section-title" style="display: flex; justify-content: space-between; align-items: center;">
+          <span>Layers</span>
+          <button id="refresh-layers-btn" class="btn-minimal" style="padding: 0; font-size: 0.8rem;" title="Refresh Layers">Refresh</button>
+        </label>
+        <div id="layers-list" style="display: flex; flex-direction: column; gap: 0.5rem; max-height: 250px; overflow-y: auto; background: #0f172a; padding: 0.5rem; border-radius: 8px;">
+          <div style="text-align: center; color: #64748b; font-size: 0.8rem; padding: 1rem 0;">No active layers</div>
+        </div>
+      </div>
+
+      <div class="sidebar-section">
+        <label class="section-title">Visual Overlays</label>
+        <div style="display: flex; align-items: center; gap: 1rem;">
+          <label class="input-minimal" style="flex: 1; cursor: pointer; display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0;">
+            <input type="checkbox" id="toggle-play-btn" /> Play Icon
+          </label>
+          <label class="input-minimal" style="flex: 1; cursor: pointer; display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0;">
+            <input type="checkbox" id="toggle-watermark" /> Watermark
+          </label>
+        </div>
+      </div>
+
+      <div class="sidebar-section" id="video-trim-section" style="display: none;">
+        <label class="section-title">🎞️ Video Trim (Seconds)</label>
+        <div style="display: flex; gap: 0.5rem; align-items: center;">
+          <div style="flex: 1;">
+            <label style="font-size: 0.65rem; opacity: 0.7;">Start</label>
+            <input type="number" id="trim-start" class="input-minimal" value="0" min="0" step="0.1" style="width: 100%;" />
+          </div>
+          <div style="flex: 1;">
+            <label style="font-size: 0.65rem; opacity: 0.7;">End</label>
+            <input type="number" id="trim-end" class="input-minimal" value="10" min="0" step="0.1" style="width: 100%;" />
+          </div>
+        </div>
+        <p style="font-size: 0.65rem; color: #94a3b8; margin-top: 2px;">Max duration will be captured.</p>
+      </div>
+
+      <div class="sidebar-section">
+        <label class="section-title">Card Size Preset</label>
+        <select id="card-size-preset" class="input-minimal">
+          <option value="portrait">📱 Portrait (4:5)</option>
+          <option value="square">🔲 Square (1:1)</option>
+          <option value="landscape">📺 Landscape (16:9)</option>
+          <option value="story">📸 Story (9:16)</option>
+        </select>
+      </div>
+
+      <div class="sidebar-section">
+
+      <div class="sidebar-section">
+        <label class="section-title">News Category</label>
+        <select id="news-category" class="input-minimal">
+          <option value="Local News">Local News</option>
+          <option value="World News">World News</option>
+          <option value="Cinema News">Cinema News</option>
+          <option value="Tamilnadu News">Tamilnadu News</option>
+          <option value="Entertainment">Entertainment</option>
+          <option value="Sport News">Sport News</option>
+        </select>
+      </div>
+      
+      <div class="sidebar-section">
+        <label class="section-title">Logo Settings</label>
+        <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+          <label for="logo-upload" class="btn-secondary" style="width: 100%; cursor: pointer; text-align: center; padding: 5px; font-size: 0.75rem;">📁 Choose Logo</label>
+          <input type="file" id="logo-upload" accept="image/*" class="visually-hidden" />
+          <div style="display: flex; gap: 0.5rem; align-items: center;">
+            <label style="font-size: 0.75rem; white-space: nowrap;">Size (px)</label>
+            <input type="number" id="logo-size" class="input-minimal" value="150" step="5" style="flex: 1;" />
+          </div>
+          <div style="display: none; gap: 0.5rem; align-items: center; margin-top: 0.5rem;">
+            <label style="font-size: 0.75rem; white-space: nowrap; flex: 1;">Box Colors</label>
+            <input type="color" id="logo-bg-color" class="input-minimal" value="#ffeb3b" style="width: 40px; padding: 2px;" title="Background Color" />
+            <input type="color" id="logo-border-color" class="input-minimal" value="#ed1c24" style="width: 40px; padding: 2px;" title="Border Color" />
+          </div>
+        </div>
+      </div>
+
+      <div class="sidebar-section">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+          <label class="section-title" style="margin-bottom: 0;">Headline</label>
+          <button type="button" id="ai-headline-btn" class="btn-secondary" style="padding: 2px 8px; font-size: 0.75rem;">✨ AI Headline</button>
+        </div>
+        <textarea id="input-h1" class="input-minimal" placeholder="Enter headline here..." style="min-height: 80px;"></textarea>
+      </div>
+
+      <div class="sidebar-section">
+        <label class="section-title">Typography</label>
+        <select id="font-family" class="input-minimal">
+          <option value="Bamini">Bamini (Tamil)</option>
+          <option value="Noto Sans Tamil">Noto Sans Tamil</option>
+          <option value="Outfit">Modern Sans</option>
+        </select>
+        <div style="display: flex; gap: 0.5rem; align-items: center; margin-top: 0.5rem;">
+          <input type="number" id="font-size" class="input-minimal" value="1.8" step="0.1" style="flex: 1;" title="Headline Size" />
+          <input type="color" id="text-color" class="input-minimal" value="#ed1c24" style="width: 50px; padding: 2px;" title="Headline Color" />
+        </div>
+      </div>
+
+      <div class="sidebar-section">
+        <label class="section-title">Date Settings</label>
+        <input type="text" id="input-date" class="input-minimal" value="" placeholder="Date (Optional)" />
+        <div style="display: flex; gap: 0.5rem; align-items: center; margin-top: 0.5rem;">
+          <input type="number" id="date-font-size" class="input-minimal" value="2" step="0.1" style="flex: 1;" title="Date Size" />
+          <input type="color" id="date-color" class="input-minimal" value="#ed1c24" style="width: 50px; padding: 2px;" title="Date Color" />
+        </div>
+      </div>
+
+      <div class="sidebar-section">
+        <label class="section-title">Watermark</label>
+        <div style="display: flex; gap: 0.5rem; align-items: center;">
+          <input type="text" id="watermark-text" class="input-minimal" placeholder="Watermark Text" style="flex: 1;" />
+          <input type="number" id="watermark-opacity" class="input-minimal" value="0" min="0" max="1" step="0.1" style="width: 60px;" title="Opacity (0-1)" />
+        </div>
+      </div>
+
+      <div class="sidebar-section" id="overlay-styling-section">
+        <label class="section-title">Image Styling</label>
+        <p style="font-size: 0.65rem; color: #94a3b8; margin-top: -5px; margin-bottom: 5px;">Select an image/logo to apply styles</p>
+        <div style="display: flex; gap: 0.5rem; align-items: center; margin-bottom: 0.5rem;">
+          <label style="font-size: 0.75rem; opacity: 0.7; flex: 1;">Roundness</label>
+          <input type="range" id="overlay-border-radius" class="input-minimal" value="0" min="0" max="150" style="flex: 2;" />
+        </div>
+        <div style="display: flex; gap: 0.5rem; align-items: center; margin-bottom: 0.5rem;">
+          <label style="font-size: 0.75rem; opacity: 0.7; flex: 1;">Stroke Size</label>
+          <input type="range" id="overlay-border-width" class="input-minimal" value="0" min="0" max="20" style="flex: 2;" />
+        </div>
+        <div style="display: flex; gap: 0.5rem; align-items: center;">
+          <label style="font-size: 0.75rem; opacity: 0.7; flex: 1;">Stroke Color</label>
+          <input type="color" id="overlay-border-color" class="input-minimal" value="#ffffff" style="flex: 2; height: 30px; padding: 2px;" />
+        </div>
+      </div>
+
+      <div class="sidebar-section">
+        <label class="section-title">Footer Design</label>
+        <div style="display: flex; gap: 0.5rem; align-items: center;">
+          <select id="footer-style" class="input-minimal" style="flex: 1.5;">
+            <option value="none">Hidden</option>
+            <option value="classic">Classic Gradient</option>
+            <option value="glass">Glassmorphism</option>
+            <option value="minimal">Minimal White</option>
+            <option value="dark">Solid Dark</option>
+          </select>
+          <input type="color" id="footer-color-1" class="input-minimal" value="#d11230" style="flex: 1; height: 38px; padding: 2px;" title="Color 1" />
+          <input type="color" id="footer-color-2" class="input-minimal" value="#d11230" style="flex: 1; height: 38px; padding: 2px;" title="Color 2" />
+        </div>
+        <input type="text" id="input-web" class="input-minimal" value="www.3zeronetwork.com" />
+        <input type="text" id="input-phone" class="input-minimal" value="076571331" />
+        <button type="button" id="add-banner-btn" class="btn-secondary" style="width: 100%; margin-top: 0.5rem; background: #8b5cf6; border-color: #8b5cf6;">➕ Add Banner</button>
+        <div id="banner-list" style="margin-top: 0.5rem; display: flex; flex-direction: column; gap: 0.3rem;"></div>
+      </div>
+
+      <div class="sidebar-section">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+          <label class="section-title" style="margin-bottom: 0;">FB Hashtags</label>
+          <button type="button" id="ai-hashtag-btn" class="btn-secondary" style="padding: 2px 8px; font-size: 0.75rem;">✨ Generate</button>
+        </div>
+        <textarea id="fb-hashtags" class="input-minimal" placeholder="#news #updates..." style="min-height: 60px; font-size: 0.8rem;"></textarea>
+      </div>
+
+      <div class="sidebar-section">
+        <label class="section-title">WordPress Settings</label>
+        <div style="margin-bottom: 0.5rem;">
+          <label style="font-size: 0.75rem; opacity: 0.7;">Category</label>
+          <select id="wp-category-select" class="input-minimal">
+            <option value="">Loading categories...</option>
+          </select>
+        </div>
+        <div>
+          <label style="font-size: 0.75rem; opacity: 0.7;">Tags (comma separated)</label>
+          <input type="text" id="wp-tags-input" class="input-minimal" placeholder="news, updates, etc." />
+        </div>
+      </div>
+
+      <div class="sidebar-section">
+        <label class="section-title">Automation Webhook (Zapier/Make)</label>
+        <input type="text" id="webhook-url" class="input-minimal" placeholder="https://hook.make.com/..." title="Paste your Webhook URL here to auto-post to social media." />
+        <div style="font-size: 0.65rem; color: #94a3b8; margin-top: 5px; opacity: 0.8;">Triggers automatically on 'Approve / Save'.</div>
+      </div>
+
+      <div class="sidebar-section">
+        <label class="section-title">My Templates</label>
+        <div style="display: flex; gap: 0.5rem; margin-bottom: 0.5rem;">
+          <input type="text" id="template-name" class="input-minimal" placeholder="Template Name" style="flex: 1;" />
+          <button type="button" id="save-template-btn" class="btn-secondary" style="background: #8b5cf6; border-color: #8b5cf6; padding: 0.75rem 1rem;">Save</button>
+        </div>
+        <div style="display: flex; gap: 0.5rem;">
+          <select id="template-select" class="input-minimal" style="flex: 1;">
+            <option value="">Select Template</option>
+          </select>
+          <button type="button" id="load-template-btn" class="btn-secondary" style="padding: 0.75rem 1rem;">Load</button>
+          <button type="button" id="delete-template-btn" class="btn-secondary" style="background: #ef4444; border-color: #ef4444; padding: 0.75rem 1rem;">🗑️</button>
+        </div>
+      </div>
+
+      <div class="sidebar-section">
+        <label class="section-title">Facebook Pages Selection</label>
+        <div style="max-height: 180px; overflow-y: auto; border: 1px solid #ccc; border-radius: 4px; padding: 0.5rem; background: #fafafa; color: #000;" id="fb-page-list">
+          <label style="font-size: 0.8rem; color: #64748b;">Loading pages...</label>
+        </div>
+      </div>
+
+      <div style="margin-top: 0.5rem; margin-bottom: 1rem; padding: 10px; background: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0;">
+          <label style="font-weight: 600; font-size: 0.9rem; margin-bottom: 0.5rem; display: block;">📘 Post Card to Selected Pages</label>
+          <select id="fb-media-type" style="width: 100%; padding: 0.5rem; border: 1px solid #ccc; border-radius: 4px; margin-bottom: 0.5rem;">
+            <option value="image">Media Type: Image</option>
+            <option value="video">Media Type: Video</option>
+          </select>
+          <input type="datetime-local" id="fb-schedule-time" style="width: 100%; padding: 0.5rem; border: 1px solid #ccc; border-radius: 4px; margin-bottom: 0.5rem;">
+          
+          <div style="display: flex; gap: 0.5rem;">
+            <button type="button" id="fb-post-single-btn" class="btn-primary" style="flex: 1; padding: 0.5rem; font-size: 0.8rem; background: #1877F2; border-color: #1877F2;">Post Now</button>
+            <button type="button" id="fb-schedule-btn" class="btn-secondary" style="flex: 1; padding: 0.5rem; font-size: 0.8rem; background: #10b981; border-color: #10b981; color: white;">Schedule</button>
+          </div>
+      </div>
+      <div class="sidebar-section">
+              <div style="margin-top: 0.5rem; margin-bottom: 1rem; padding: 10px; background: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0;">
+          <label style="font-weight: 600; font-size: 0.9rem; margin-bottom: 0.5rem; display: block;">📘 Post Card to Selected Pages</label>
+          <select id="fb-media-type" style="width: 100%; padding: 0.5rem; border: 1px solid #ccc; border-radius: 4px; margin-bottom: 0.5rem;">
+            <option value="image">Media Type: Image</option>
+            <option value="video">Media Type: Video</option>
+          </select>
+          <input type="datetime-local" id="fb-schedule-time" style="width: 100%; padding: 0.5rem; border: 1px solid #ccc; border-radius: 4px; margin-bottom: 0.5rem;">
+          
+          <div style="display: flex; gap: 0.5rem;">
+            <button type="button" id="fb-post-single-btn" class="btn-primary" style="flex: 1; padding: 0.5rem; font-size: 0.8rem; background: #1877F2; border-color: #1877F2;">Post Now</button>
+            <button type="button" id="fb-schedule-btn" class="btn-secondary" style="flex: 1; padding: 0.5rem; font-size: 0.8rem; background: #10b981; border-color: #10b981; color: white;">Schedule</button>
+          </div>
+      </div>
+
+        <label class="section-title">Bulk Upload & Auto-Post</label>
+        <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+          <select id="bulk-media-type" class="input-minimal">
+            <option value="image">📷 Upload Image</option>
+            <option value="fb-video">📘 Facebook Video</option>
+            <option value="youtube">▶️ YouTube Link</option>
+            <option value="tiktok">🎵 TikTok Link</option>
+            <option value="video-file">🎞️ Drop Video File</option>
+          </select>
+          <input type="text" id="bulk-media-url" class="input-minimal" placeholder="Paste video URL here..." style="display: none;" />
+          <label for="bulk-image-upload" class="btn-secondary" style="width: 100%; cursor: pointer; text-align: center; padding: 5px; font-size: 0.75rem; display: block;" id="bulk-upload-label">📁 Choose Image</label>
+          <input type="file" id="bulk-image-upload" accept="image/*" style="display: none;" />
+          <label for="bulk-video-upload" class="btn-secondary" style="width: 100%; cursor: pointer; text-align: center; padding: 5px; font-size: 0.75rem; display: none;" id="bulk-video-upload-label">🎞️ Choose Video</label>
+          <input type="file" id="bulk-video-upload" accept="video/*" style="display: none;" />
+          <textarea id="bulk-headline" class="input-minimal" placeholder="Headline for post..." style="min-height: 60px; font-size: 0.8rem;"></textarea>
+          <textarea id="bulk-hashtags" class="input-minimal" placeholder="#news #updates..." style="min-height: 40px; font-size: 0.8rem;"></textarea>
+          <div id="bulk-fb-pages-list" style="max-height: 150px; overflow-y: auto; border: 1px solid #ccc; padding: 5px; margin-bottom: 0.5rem; background: white; border-radius: 4px; font-size: 0.85rem;">
+             <div style="color: #666; font-size: 0.8rem; text-align: center;">Click 'Sync Facebook Pages' below to load your pages.</div>
+          </div>
+          <button type="button" id="bulk-post-all-btn" class="btn-primary" style="width: 100%; padding: 0.5rem; font-size: 0.8rem; background: #10b981; border-color: #10b981;">🚀 Post to Selected Pages</button>
+        </div>
+      </div>
+
+        <div style="display: flex; gap: 0.5rem; margin-top: 1rem; flex-wrap: wrap;">
+          <button type="button" id="download-btn" class="btn-primary" style="flex: 1 1 45%; padding: 0.5rem; font-size: 0.8rem;">📥 Download PNG</button>
+          <button type="button" id="download-video-btn" class="btn-primary" style="flex: 1 1 45%; padding: 0.5rem; font-size: 0.8rem; background: #3b82f6; border-color: #3b82f6; display: none;">🎬 Download Video</button>
+          <button type="button" id="wp-post-btn" class="btn-secondary" style="flex: 1 1 45%; padding: 0.5rem; font-size: 0.8rem;">🚀 Post to WP</button>
+          <button type="button" id="fb-post-all-btn" class="btn-primary" style="flex: 1 1 45%; padding: 0.5rem; font-size: 0.8rem; background: #64748b; border-color: #64748b;">Post to All Pages</button>
+        </div>
+        <div id="render-log-section" style="margin-top: 0.5rem; display: none;">
+          <label style="font-size: 0.75rem; color: #94a3b8; display: block; margin-bottom: 0.3rem;">Render Log:</label>
+          <textarea id="render-log" readonly style="width: 100%; height: 120px; background: #0f172a; color: #e2e8f0; border: 1px solid #334155; border-radius: 4px; padding: 0.5rem; font-family: monospace; font-size: 0.75rem; resize: vertical;"></textarea>
+        </div>
+      <button type="button" id="manual-webhook-btn" class="btn-primary" style="width: 100%; margin-top: 0.5rem; padding: 0.5rem; font-size: 0.8rem; background: #e11d48; border-color: #e11d48;">⚡ Send to Webhook (Auto-Post)</button>
+
+      <button type="button" id="save-settings-btn" class="btn-secondary" style="width: 100%; margin-top: 1rem; color: #10b981; border-color: #10b981;">💾 Save Settings</button>
+        <button type="button" id="reset-btn" class="btn-minimal" style="width: 100%; margin-top: 0.5rem;">Reset Layout</button>
+      </div>
+    </aside>
+  </div>
+
+  <!-- CROPPER MODAL -->
+  <div id="cropper-modal" class="modal">
+    <div class="modal-content">
+      <h3 style="margin-bottom: 1rem;">Crop Image</h3>
+      <div class="cropper-wrapper">
+        <img id="cropper-image" src="" style="max-width: 100%;">
+      </div>
+      <div style="display: flex; gap: 0.5rem; margin-top: 1rem;">
+        <button type="button" id="crop-apply-btn" class="btn-primary" style="flex: 1;">Apply Crop</button>
+        <button type="button" id="crop-cancel-btn" class="btn-secondary" style="flex: 1;">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="success-toast" class="success-toast">Action Successful!</div>
+
+  <div id="video-recording-overlay" class="modal" style="display: none; z-index: 3000;">
+    <div class="modal-content" style="text-align: center;">
+      <div class="spinner" style="margin: 0 auto 1rem;"></div>
+      <h3>🎬 Generating Video Card...</h3>
+      <p style="margin-top: 1rem; color: #94a3b8;">Please keep this tab active. This will take a moment.</p>
+      <div style="margin-top: 1.5rem; background: #1e293b; border-radius: 10px; height: 10px; overflow: hidden;">
+        <div id="video-record-progress" style="background: #3b82f6; height: 100%; width: 0%; transition: width 0.3s;"></div>
+      </div>
+    </div>
+  </div>
+
+  <script src="./main.js?v=1786398757"></script>
+</body>
+</html>
+
+
+

@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Video Editor | Auto Edit for Shorts & Reels</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="video-editor.css">
+</head>
+<body>
+  <!-- Toast Container -->
+  <div id="toast-container"></div>
+
+  <!-- Loader overlay -->
+  <div id="loader" class="hidden">
+    <div class="spinner"></div>
+    <div class="loader-text">Processing Video...</div>
+  </div>
+  
+  <!-- Main App Container -->
+  <div class="app-container">
+    
+    <!-- LEFT SIDEBAR (280px) -->
+    <aside class="sidebar">
+      <div class="logo">
+        <span class="logo-text">AI Video Editor</span>
+      </div>
+      
+      <nav class="nav-links">
+        <a href="#" class="nav-item active" data-nav="dashboard">
+          <span class="nav-icon">📊</span>
+          <span class="nav-label">Dashboard</span>
+        </a>
+        <a href="#" class="nav-item" data-nav="videos">
+          <span class="nav-icon">🎬</span>
+          <span class="nav-label">My Videos</span>
+        </a>
+        <a href="#" class="nav-item" data-nav="templates">
+          <span class="nav-icon">📑</span>
+          <span class="nav-label">Templates</span>
+        </a>
+        <a href="#" class="nav-item" data-nav="music">
+          <span class="nav-icon">🎵</span>
+          <span class="nav-label">Music</span>
+        </a>
+        <a href="#" class="nav-item" data-nav="settings">
+          <span class="nav-icon">⚙️</span>
+          <span class="nav-label">Settings</span>
+        </a>
+      </nav>
+      
+      <div class="sidebar-scrollable">
+        <!-- URL Input Section -->
+        <div class="sidebar-section">
+          <h3 class="section-title">🎬 Video Source</h3>
+          <div class="input-group">
+            <input type="text" id="url-input" placeholder="Paste YouTube Shorts URL...">
+          </div>
+          <button id="generate-btn" class="btn-primary">
+            <span>Generate Video</span> <span class="emoji">🚀</span>
+          </button>
+          <div class="help-text">Supports: YouTube Shorts, TikTok, Instagram Reels</div>
+        </div>
+        
+        <!-- Processing Settings -->
+        <div class="sidebar-section">
+          <h3 class="section-title">⚙️ Processing Settings</h3>
+          
+          <div class="toggle-row">
+            <label class="toggle-label">Auto Trim</label>
+            <label class="toggle-switch">
+              <input type="checkbox" id="setting-autoTrim" checked>
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+          
+          <div class="toggle-row">
+            <label class="toggle-label">Smart Crop 9:16</label>
+            <label class="toggle-switch">
+              <input type="checkbox" id="setting-smartCrop" checked>
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+          
+          <div class="toggle-row">
+            <label class="toggle-label">Noise Reduction</label>
+            <label class="toggle-switch">
+              <input type="checkbox" id="setting-noiseReduction" checked>
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+          
+          <div class="toggle-row">
+            <label class="toggle-label">Auto Captions</label>
+            <label class="toggle-switch">
+              <input type="checkbox" id="setting-autoCaptions" checked>
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+          
+          <div class="toggle-row">
+            <label class="toggle-label">Background Music</label>
+            <label class="toggle-switch">
+              <input type="checkbox" id="setting-backgroundMusic" checked>
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+          
+          <div class="toggle-row">
+            <label class="toggle-label">Color Enhancement</label>
+            <label class="toggle-switch">
+              <input type="checkbox" id="setting-colorEnhancement" checked>
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+        </div>
+        
+        <!-- Export Settings -->
+        <div class="sidebar-section">
+          <h3 class="section-title">📦 Export Settings</h3>
+          
+          <div class="select-group">
+            <label>Format</label>
+            <select id="export-format">
+              <option value="mp4">MP4</option>
+              <option value="mov">MOV</option>
+              <option value="webm">WEBM</option>
+            </select>
+          </div>
+          
+          <div class="select-group">
+            <label>Resolution</label>
+            <select id="export-resolution">
+              <option value="720p">720p</option>
+              <option value="1080p" selected>1080p</option>
+              <option value="2k">2K</option>
+              <option value="4k">4K</option>
+            </select>
+          </div>
+          
+          <div class="select-group">
+            <label>Codec</label>
+            <select id="export-codec">
+              <option value="h264" selected>H.264</option>
+              <option value="h265">H.265</option>
+              <option value="av1">AV1</option>
+            </select>
+          </div>
+        </div>
+        
+        <!-- Caption Style -->
+        <div class="sidebar-section">
+          <h3 class="section-title">💬 Caption Style</h3>
+          
+          <div class="select-group">
+            <label>Font</label>
+            <select id="caption-font">
+              <option value="bold" selected>Bold</option>
+              <option value="regular">Regular</option>
+              <option value="serif">Serif</option>
+            </select>
+          </div>
+          
+          <div class="color-pickers">
+            <div class="color-picker-group">
+              <label>Text Color</label>
+              <input type="color" id="caption-color" value="#ffffff">
+            </div>
+            <div class="color-picker-group">
+              <label>Highlight Color</label>
+              <input type="color" id="highlight-color" value="#fdcb6e">
+            </div>
+          </div>
+          
+          <div class="select-group">
+            <label>Animation</label>
+            <select id="caption-animation">
+              <option value="bounce" selected>Bounce</option>
+              <option value="scale">Scale</option>
+              <option value="fade">Fade</option>
+              <option value="typewriter">Typewriter</option>
+            </select>
+          </div>
+          
+          <div class="select-group">
+            <label>Max lines</label>
+            <select id="caption-lines">
+              <option value="1">1</option>
+              <option value="2" selected>2</option>
+              <option value="3">3</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </aside>
+    
+    <!-- MAIN CONTENT AREA -->
+    <main class="main-content">
+      
+      <!-- Header Bar -->
+      <header class="top-bar">
+        <h1 class="page-title">Dashboard</h1>
+        <div class="top-bar-right">
+          <div class="search-box">
+            <span class="search-icon">🔍</span>
+            <input type="text" id="global-search" placeholder="Search videos...">
+          </div>
+          <div class="credits-badge">
+            <span class="diamond">💎</span>
+            <span class="credits-text">450 Credits</span>
+          </div>
+          <button class="notification-btn">
+            <span>🔔</span>
+            <span class="notification-dot"></span>
+          </button>
+          <div class="user-avatar">
+            <img src="https://ui-avatars.com/api/?name=User&background=6c5ce7&color=fff" alt="User Avatar">
+          </div>
+        </div>
+      </header>
+      
+      <div class="main-scrollable">
+        <!-- Hero Section -->
+        <section class="hero-section">
+          <h2 class="hero-heading">Transform Your Videos with AI</h2>
+          <p class="hero-subtitle">Generate captivating shorts, reels, and TikToks automatically.</p>
+          
+          <div class="hero-input-container">
+            <input type="text" id="hero-url-input" placeholder="Paste YouTube Shorts URL here...">
+            <button id="hero-generate-btn" class="btn-primary">
+              Generate <span class="emoji">🚀</span>
+            </button>
+          </div>
+          <div class="hero-help-text">Supports: YouTube Shorts, TikTok, Instagram Reels (Max 60s)</div>
+        </section>
+        
+        <!-- Stats Cards Row -->
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-icon icon-purple">🎬</div>
+            <div class="stat-content">
+              <div class="stat-value" data-value="1284">0</div>
+              <div class="stat-label">Videos Processed</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon icon-blue">⏱️</div>
+            <div class="stat-content">
+              <div class="stat-value" data-value="342">0</div><span class="stat-unit">h</span>
+              <div class="stat-label">Time Saved</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon icon-green">💎</div>
+            <div class="stat-content">
+              <div class="stat-value" data-value="450">0</div>
+              <div class="stat-label">Active Credits</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon icon-orange">💾</div>
+            <div class="stat-content">
+              <div class="stat-value" data-value="12.4">0</div><span class="stat-unit">GB</span>
+              <div class="stat-label">Storage Used</div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Processing Queue Section -->
+        <section class="processing-section hidden" id="processing-section">
+          <div class="section-header">
+            <h3 class="section-title"><span class="pulse-dot"></span> Active Processing</h3>
+            <span class="processing-filename" id="processing-filename">Tech Review Shorts.mp4</span>
+          </div>
+          
+          <div class="progress-container">
+            <div class="progress-bar-bg">
+              <div class="progress-bar-fill" id="progress-bar-fill" style="width: 0%"></div>
+            </div>
+            <span class="progress-text" id="progress-text">0%</span>
+          </div>
+          
+          <div class="steps-container">
+            <div class="step step-download" data-step="0">
+              <div class="step-circle">1</div>
+              <div class="step-label">Download</div>
+            </div>
+            <div class="step step-analyze" data-step="1">
+              <div class="step-circle">2</div>
+              <div class="step-label">Analyze</div>
+            </div>
+            <div class="step step-caption" data-step="2">
+              <div class="step-circle">3</div>
+              <div class="step-label">Caption</div>
+            </div>
+            <div class="step step-edit" data-step="3">
+              <div class="step-circle">4</div>
+              <div class="step-label">Edit</div>
+            </div>
+            <div class="step step-render" data-step="4">
+              <div class="step-circle">5</div>
+              <div class="step-label">Render</div>
+            </div>
+            <div class="step step-complete" data-step="5">
+              <div class="step-circle">6</div>
+              <div class="step-label">Complete</div>
+            </div>
+          </div>
+        </section>
+        
+        <!-- Recent Videos Grid -->
+        <section class="recent-videos-section">
+          <div class="section-header">
+            <h3 class="section-title">Recent Videos</h3>
+            <a href="#" class="view-all-link">View All →</a>
+          </div>
+          
+          <div class="video-grid" id="video-grid">
+            <!-- Video cards injected via JS -->
+          </div>
+        </section>
+      </div>
+      
+      <!-- Video Preview Modal (hidden by default) -->
+      <div class="modal-overlay hidden" id="video-modal">
+        <div class="modal-content">
+          <button class="modal-close" id="modal-close">×</button>
+          
+          <div class="modal-layout">
+            <div class="modal-left">
+              <div class="video-player-wrapper">
+                <div class="vertical-player-frame" id="vertical-player-frame">
+                  <!-- Vertical Video Element -->
+                  <video id="modal-video-player" class="vertical-video-el" preload="metadata" playsinline loop>
+                    <source src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4" type="video/mp4" />
+                  </video>
+                  
+                  <!-- CapCut Animated Captions Overlay -->
+                  <div class="capcut-captions-overlay" id="capcut-captions-overlay">
+                    <div class="caption-animated-box" id="caption-animated-box">
+                      <span class="caption-word active-word">HOW 🚀</span>
+                      <span class="caption-word">TO</span>
+                      <span class="caption-word highlight">EDIT</span>
+                      <span class="caption-word">VIDEOS</span>
+                    </div>
+                  </div>
+                  
+                  <!-- Watermark Overlay -->
+                  <div class="watermark-overlay">
+                    <span class="watermark-logo">⚡ AI EDITOR</span>
+                  </div>
+                  
+                  <!-- AI Filter Badges -->
+                  <div class="ai-badge-overlay">
+                    <span class="ai-pill">✨ 9:16 Smart Crop</span>
+                    <span class="ai-pill">🎨 Color HDR</span>
+                  </div>
+                  
+                  <!-- Play/Pause Overlay -->
+                  <div class="player-overlay" id="player-overlay">
+                    <span class="play-icon-large" id="play-icon-large">▶</span>
+                  </div>
+                </div>
+                
+                <!-- Video Controls Bar -->
+                <div class="custom-video-controls">
+                  <button class="ctrl-btn" id="ctrl-play-btn">▶</button>
+                  <input type="range" class="ctrl-slider" id="ctrl-seek-slider" min="0" max="100" value="0">
+                  <span class="ctrl-time" id="ctrl-time-display">0:00 / 0:58</span>
+                  <button class="ctrl-btn" id="ctrl-mute-btn">🔊</button>
+                </div>
+              </div>
+              <div class="video-meta">
+                <h3 class="video-modal-title" id="modal-video-title">Video Title</h3>
+                <div class="video-badges">
+                  <span class="meta-badge" id="modal-video-duration">00:00</span>
+                  <span class="meta-badge" id="modal-video-res">1080x1920</span>
+                  <span class="meta-badge">60fps</span>
+                </div>
+              </div>
+            </div>
+            
+            <div class="modal-right">
+              <h4 class="modal-section-title">Export Options</h4>
+              <div class="export-actions">
+                <button class="btn-primary modal-action-btn" id="modal-download-btn">
+                  Download <span class="icon">⬇️</span>
+                </button>
+                <button class="btn-secondary modal-action-btn" id="modal-share-btn">
+                  Share <span class="icon">🔗</span>
+                </button>
+                <button class="btn-outline modal-action-btn">
+                  Re-edit <span class="icon">✏️</span>
+                </button>
+                <button class="btn-danger modal-action-btn" id="modal-delete-btn">
+                  Delete <span class="icon">🗑️</span>
+                </button>
+              </div>
+              
+              <h4 class="modal-section-title mt-4">Caption Preview</h4>
+              <div class="modal-captions-area">
+                <!-- Caption preview items -->
+                <div class="caption-line"><span class="caption-time">00:01</span> <span class="caption-text">Welcome to this quick tutorial</span></div>
+                <div class="caption-line"><span class="caption-time">00:03</span> <span class="caption-text">Today we are going to learn</span></div>
+                <div class="caption-line"><span class="caption-time">00:05</span> <span class="caption-text">How to edit videos with AI</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+    
+    <!-- RIGHT PANEL (300px) -->
+    <aside class="right-panel">
+      <div class="panel-scrollable">
+        
+        <!-- AI Analysis -->
+        <div class="panel-section">
+          <h3 class="section-title">🧠 AI Analysis</h3>
+          <div class="analysis-card">
+            <div class="analysis-row">
+              <span class="analysis-label">Content:</span>
+              <span class="badge badge-tech">Technology</span>
+            </div>
+            <div class="analysis-row">
+              <span class="analysis-label">Confidence:</span>
+              <div class="mini-progress-container">
+                <div class="mini-progress-fill" style="width: 94%"></div>
+              </div>
+              <span class="analysis-value">94%</span>
+            </div>
+            <div class="analysis-row">
+              <span class="analysis-label">Suggested Style:</span>
+              <span class="analysis-value highlight-text">Tech Modern</span>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Caption Preview -->
+        <div class="panel-section">
+          <h3 class="section-title">📝 Caption Preview</h3>
+          <div class="caption-list" id="caption-list">
+            <!-- Populated via JS -->
+          </div>
+        </div>
+        
+        <!-- Music Selection -->
+        <div class="panel-section">
+          <h3 class="section-title">🎵 Music Selection</h3>
+          <div class="music-current">
+            <span class="music-label">Selected:</span>
+            <span class="music-name highlight-text" id="current-music">Cinematic Rise</span>
+          </div>
+          
+          <div class="music-tabs">
+            <button class="music-tab active" data-tab="trending">Trending</button>
+            <button class="music-tab" data-tab="cinematic">Cinematic</button>
+            <button class="music-tab" data-tab="lofi">Lo-fi</button>
+          </div>
+          
+          <div class="music-list" id="music-list">
+            <!-- Populated via JS -->
+          </div>
+          
+          <div class="volume-control">
+            <span class="volume-icon">🔈</span>
+            <input type="range" class="volume-slider" id="music-volume" min="0" max="100" value="50">
+            <span class="volume-icon">🔊</span>
+          </div>
+        </div>
+        
+        <!-- Quick Actions -->
+        <div class="panel-section">
+          <h3 class="section-title">⚡ Quick Actions</h3>
+          <div class="quick-actions-grid">
+            <button class="btn-action" id="btn-download-all">
+              <span class="btn-icon">📥</span> Download All
+            </button>
+            <button class="btn-action" id="btn-batch-process">
+              <span class="btn-icon">🔄</span> Batch Process
+            </button>
+            <button class="btn-action btn-action-danger" id="btn-clear-history">
+              <span class="btn-icon">🗑️</span> Clear History
+            </button>
+          </div>
+        </div>
+        
+      </div>
+    </aside>
+  </div>
+  
+  <script src="video-editor.js"></script>
+</body>
+</html>

@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FB Downloader Pro | Video & Post Scraper</title>
+  <meta name="description" content="Download Facebook videos in HD/SD quality and scrape post content for free. No API key required." />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Noto+Sans+Tamil:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="fb-downloader.css" />
+</head>
+<body>
+
+  <div class="bg-effects">
+    <div class="bg-orb bg-orb-1"></div>
+    <div class="bg-orb bg-orb-2"></div>
+    <div class="bg-orb bg-orb-3"></div>
+    <div class="bg-grid"></div>
+  </div>
+
+  <div class="app-wrapper">
+    <header class="hero-section" id="hero">
+      <div class="hero-badge">
+        <span class="badge-dot"></span>
+        Free & No API Key Required
+      </div>
+      <h1 class="hero-title">
+        <span class="title-gradient">FB Downloader</span>
+        <span class="title-accent">Pro</span>
+      </h1>
+      <p class="hero-subtitle">Download Facebook videos in HD & scrape post content instantly</p>
+
+      <div class="search-container" id="search-container">
+        <div class="search-icon">
+          <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        </div>
+        <input type="text" id="fb-url-input" class="search-input" placeholder="Paste Facebook video or post URL here..." autocomplete="off" />
+        <div class="search-actions">
+          <button id="paste-btn" class="action-btn paste-btn" title="Paste"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="9" height="9" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+          <button id="fetch-btn" class="action-btn fetch-btn" title="Fetch"><svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></button>
+        </div>
+      </div>
+
+      <div class="type-selector">
+        <button class="type-btn active" data-type="auto">🔍 Auto Detect</button>
+        <button class="type-btn" data-type="video">🎬 Video</button>
+        <button class="type-btn" data-type="post">📝 Post</button>
+      </div>
+
+      <!-- CRITICAL: Cookie Setup Panel -->
+      <div class="cookie-section">
+        <button class="cookie-toggle-btn" id="cookie-toggle-btn">
+          <span id="cookie-status-icon">🔒</span>
+          <span id="cookie-status-text">Setup FB Cookies (Required for restricted pages)</span>
+        </button>
+        <div class="cookie-panel" id="cookie-panel" style="display:none;">
+          <div class="cookie-instructions">
+            <p><strong>How to get cookies:</strong> Login to FB -> Press F12 -> Console -> Type <code>document.cookie</code> -> Paste below</p>
+          </div>
+          <textarea id="cookie-input" class="cookie-textarea" placeholder="Paste cookies here..."></textarea>
+          <button class="cookie-save-btn" id="cookie-save-btn">🍪 Save Cookies</button>
+        </div>
+      </div>
+    </header>
+
+    <div class="loading-section" id="loading-section" style="display: none;">
+      <div class="loader-ring"><div class="loader-ring-inner"></div></div>
+      <p class="loading-text">Scraping Facebook content...</p>
+    </div>
+
+    <div class="error-section" id="error-section" style="display: none;">
+      <div class="error-card">
+        <div class="error-icon">⚠️</div>
+        <p id="error-message"></p>
+        <button class="retry-btn" id="retry-btn">🔄 Try Again</button>
+      </div>
+    </div>
+
+    <div class="results-section" id="results-section" style="display: none;">
+      <div class="meta-card" id="meta-card">
+        <div class="meta-thumbnail"><img src="" id="meta-img" /><div class="meta-type-badge" id="meta-type-badge">POST</div></div>
+        <div class="meta-info">
+          <h2 class="meta-title" id="meta-title"></h2>
+          <p class="meta-description" id="meta-description"></p>
+          <div class="meta-source"><span id="meta-source-name">Facebook</span></div>
+        </div>
+      </div>
+
+      <div class="video-results" id="video-results" style="display: none;">
+        <h3 class="section-heading">🎬 Video Downloads</h3>
+        <div class="download-cards">
+          <div class="download-card" id="hd-card" style="display: none;">
+            <div class="download-info"><h4>High Definition</h4></div>
+            <a href="#" id="hd-download" class="download-btn hd-btn">Download HD</a>
+          </div>
+          <div class="download-card" id="sd-card" style="display: none;">
+            <div class="download-info"><h4>Standard Definition</h4></div>
+            <a href="#" id="sd-download" class="download-btn sd-btn">Download SD</a>
+          </div>
+        </div>
+        <div class="video-preview" id="video-preview" style="display: none;">
+          <video id="video-player" controls><source id="video-source" src=""></video>
+        </div>
+      </div>
+
+      <div class="post-results" id="post-results" style="display: none;">
+        <h3 class="section-heading">📝 Post Content</h3>
+        <div class="post-content-card">
+          <div class="post-author"><div class="author-avatar" id="author-avatar">FB</div><div class="author-info"><strong id="author-name"></strong><span id="post-time"></span></div></div>
+          <div class="post-text" id="post-text"></div>
+          <button class="copy-text-btn" id="copy-text-btn">Copy Text</button>
+        </div>
+        <div class="post-images" id="post-images" style="display: none;"><div class="images-grid" id="images-grid"></div></div>
+      </div>
+
+      <div class="raw-data-section">
+        <button class="toggle-raw-btn" id="toggle-raw-btn">View Raw JSON Data</button>
+        <pre class="raw-json" id="raw-json" style="display: none;"></pre>
+      </div>
+    </div>
+
+    <section class="how-it-works">
+      <div class="steps-grid">
+        <div class="step-card"><h3>01 Paste URL</h3><p>Copy and paste the FB URL</p></div>
+        <div class="step-card"><h3>02 Scrape</h3><p>Our server fetches the content</p></div>
+        <div class="step-card"><h3>03 Download</h3><p>Save media or copy text</p></div>
+      </div>
+    </section>
+
+    <footer class="app-footer">
+      <p>Built with ❤️ for NewsFlash Pro • No API Key Required</p>
+    </footer>
+  </div>
+
+  <div class="toast" id="toast"><span id="toast-message"></span></div>
+
+  <script src="fb-downloader.js"></script>
+</body>
+</html>

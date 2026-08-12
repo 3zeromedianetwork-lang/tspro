@@ -1,0 +1,37 @@
+{
+    "Chudar Media": {
+        "logo": "./assets/chudar_logo.png",
+        "template": "classic",
+        "hashtags": "#ChudarMedia #News"
+    },
+    "TSflix": {
+        "logo": "./assets/tsflix_logo.png",
+        "template": "fullbleed",
+        "hashtags": "#TSflix #Movies"
+    },
+    "3Zero News Network": {
+        "logo": "./assets/3zero_logo.png",
+        "template": "breaking",
+        "hashtags": "#3ZeroNews #Breaking"
+    },
+    "Chithuarts": {
+        "logo": "./assets/chithuarts_logo.png",
+        "template": "magazine",
+        "hashtags": "#Chithuarts #Art"
+    },
+    "Tsholdingslk.com": {
+        "logo": "./assets/tsholdings_logo.png",
+        "template": "splitview",
+        "hashtags": "#TSHoldings #Business"
+    },
+    "SLCineTalkies": {
+        "logo": "./assets/slcine_logo.png",
+        "template": "goldframe",
+        "hashtags": "#SLCineTalkies #Cinema"
+    },
+    "3Zero News Network - Tamil": {
+        "logo": "./assets/3zero_tamil_logo.png",
+        "template": "classic",
+        "hashtags": "#3ZeroTamil #TamilNews"
+    }
+}

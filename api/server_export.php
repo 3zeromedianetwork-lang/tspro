@@ -101,24 +101,36 @@ $overlayW = $overlayW % 2 === 0 ? $overlayW : $overlayW + 1;
 $overlayH = $overlayH % 2 === 0 ? $overlayH : $overlayH + 1;
 
 $boxHeightRatio = isset($input['boxHeightRatio']) ? (float)$input['boxHeightRatio'] : 0.75;
-$boxH = round($overlayH * $boxHeightRatio);
-$boxH = $boxH % 2 === 0 ? $boxH : $boxH + 1;
 
 // Convert paths to forward slashes for FFmpeg on Windows
 $videoFileFF = str_replace('\\', '/', $videoFile);
 $overlayFileFF = str_replace('\\', '/', $overlayFile);
 $outputFileFF = str_replace('\\', '/', $outputFile);
 
+$videoTransform = isset($input['videoTransform']) ? $input['videoTransform'] : ['x'=>0, 'y'=>0, 'scaleW'=>1, 'scaleH'=>$boxHeightRatio];
+$scaleW = isset($videoTransform['scaleW']) ? (float)$videoTransform['scaleW'] : 1;
+$scaleH = isset($videoTransform['scaleH']) ? (float)$videoTransform['scaleH'] : $boxHeightRatio;
+$x = isset($videoTransform['x']) ? (float)$videoTransform['x'] : 0;
+$y = isset($videoTransform['y']) ? (float)$videoTransform['y'] : 0;
+
+$wrapW = round($overlayW * $scaleW);
+$wrapH = round($overlayH * $scaleH);
+if ($wrapW % 2 !== 0) $wrapW += 1;
+if ($wrapH % 2 !== 0) $wrapH += 1;
+
+$posX = round($overlayW * $x);
+$posY = round($overlayH * $y);
+if ($posX % 2 !== 0) $posX += 1;
+if ($posY % 2 !== 0) $posY += 1;
+
 // ============ SERVER-SIDE TRANSPARENCY ============
-// Cut a transparent "window" in the overlay PNG where the video should play.
-// This is done server-side with PHP GD to avoid all browser/CSS transform issues.
+// Cut a transparent "window" exactly where the video is located.
 $img = imagecreatefrompng($overlayFile);
 if ($img) {
     imagesavealpha($img, true);
     imagealphablending($img, false);
     $transparent = imagecolorallocatealpha($img, 0, 0, 0, 127);
-    // The video area is at position (0, 0) with dimensions (overlayW, boxH)
-    imagefilledrectangle($img, 0, 0, $overlayW - 1, $boxH - 1, $transparent);
+    imagefilledrectangle($img, $posX, $posY, $posX + $wrapW - 1, $posY + $wrapH - 1, $transparent);
     imagepng($img, $overlayFile);
     imagedestroy($img);
 }
@@ -133,34 +145,16 @@ if ($trimEnd !== null && $trimEnd > $trimStart) {
     $cmd .= " -to " . $trimEnd;
 }
 
-// Inputs: Video and Overlay (looped)
 $cmd .= " -i \"$videoFileFF\" -loop 1 -i \"$overlayFileFF\"";
 
-// Complex Filter:
-// 1. Calculate wrapper dimensions and translations based on UI pan/zoom
-$videoTransform = isset($input['videoTransform']) ? $input['videoTransform'] : ['x'=>0, 'y'=>0, 'scaleW'=>1, 'scaleH'=>1];
-$scaleW = isset($videoTransform['scaleW']) ? (float)$videoTransform['scaleW'] : 1;
-$scaleH = isset($videoTransform['scaleH']) ? (float)$videoTransform['scaleH'] : 1;
-$x = isset($videoTransform['x']) ? (float)$videoTransform['x'] : 0;
-$y = isset($videoTransform['y']) ? (float)$videoTransform['y'] : 0;
-
-$wrapW = round($overlayW * $scaleW);
-$wrapH = round($boxH * $scaleH);
-// Ensure width and height are even for libx264
-if ($wrapW % 2 !== 0) $wrapW += 1;
-if ($wrapH % 2 !== 0) $wrapH += 1;
-
-$offsetX = round($x * $overlayW);
-$offsetY = round($y * $boxH);
-
-// Create a black box matching the exact size of the image box
-$filter = "color=c=black:s={$overlayW}x{$boxH}[black_box];";
-// Scale and crop the video to match the wrapper size in the UI
-$filter .= "[0:v]scale={$wrapW}:{$wrapH}:force_original_aspect_ratio=increase,crop={$wrapW}:{$wrapH}[vid_scaled];";
-// Overlay the scaled video onto the black box at the exact translated position
-$filter .= "[black_box][vid_scaled]overlay=x={$offsetX}:y={$offsetY}:shortest=1[vid_boxed];";
-// Pad the resulting box to the full size of the overlay (black below the video)
-$filter .= "[vid_boxed]pad={$overlayW}:{$overlayH}:0:0:color=black[bg];";
+// Scale and crop the video to match the wrapper size
+$filter = "[0:v]scale={$wrapW}:{$wrapH}:force_original_aspect_ratio=increase,crop={$wrapW}:{$wrapH}[vid_scaled];";
+// Create a full-size black background
+$filter .= "color=c=black:s={$overlayW}x{$overlayH}[black_box];";
+// Overlay video onto the exact position
+$filter .= "[black_box][vid_scaled]overlay=x={$posX}:y={$posY}:shortest=1[vid_boxed];";
+// Overlay the template on top of everything
+$filter .= "[vid_boxed][1:v]overlay=0:0[bg];";
 
 $hasLogoDate = !empty($input['logoDateData']);
 

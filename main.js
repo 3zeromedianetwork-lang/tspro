@@ -1,4 +1,4 @@
-document.addEventListener('DOMContentLoaded', () => {
+﻿document.addEventListener('DOMContentLoaded', () => {
   console.log('NewsFlash Pro Started');
 
   // --- SERVER-SIDE SHARED STATE ---
@@ -78,7 +78,7 @@ document.addEventListener('DOMContentLoaded', () => {
           editorBaseVideo.load();
           videoEditorEmptyState.style.display = 'none';
           showLoader(false);
-          showToast('✅ Video Loaded in Editor');
+          showToast('âœ… Video Loaded in Editor');
       } catch(err) {
           console.error(err);
           showLoader(false);
@@ -92,7 +92,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const el = document.createElement('div');
     el.className = 'video-lower-third draggable-overlay';
     el.innerHTML = `
-      <div class="delete-overlay-btn" style="position: absolute; top: -10px; right: -10px; background: red; color: white; border-radius: 50%; width: 20px; height: 20px; text-align: center; line-height: 20px; cursor: pointer; font-size: 12px; display: none; z-index: 100;">✕</div>
+      <div class="delete-overlay-btn" style="position: absolute; top: -10px; right: -10px; background: red; color: white; border-radius: 50%; width: 20px; height: 20px; text-align: center; line-height: 20px; cursor: pointer; font-size: 12px; display: none; z-index: 100;">âœ•</div>
       <h1 contenteditable="true" spellcheck="false">NEWS HEADLINE HERE</h1>
       <p contenteditable="true" spellcheck="false">Details or reporter name goes here...</p>
     `;
@@ -209,7 +209,7 @@ document.addEventListener('DOMContentLoaded', () => {
         el.style.width = '100px';
         el.style.height = (100 * (img.naturalHeight / img.naturalWidth)) + 'px';
         el.innerHTML = `
-          <div class="delete-overlay-btn" style="position: absolute; top: -10px; right: -10px; background: red; color: white; border-radius: 50%; width: 20px; height: 20px; text-align: center; line-height: 20px; cursor: pointer; font-size: 12px; display: none; z-index: 100;">✕</div>
+          <div class="delete-overlay-btn" style="position: absolute; top: -10px; right: -10px; background: red; color: white; border-radius: 50%; width: 20px; height: 20px; text-align: center; line-height: 20px; cursor: pointer; font-size: 12px; display: none; z-index: 100;">âœ•</div>
           <img src="${url}" style="width: 100%; height: 100%; object-fit: contain; pointer-events: none;" />
         `;
         
@@ -248,7 +248,7 @@ document.addEventListener('DOMContentLoaded', () => {
           el.style.width = startW + 'px';
           el.style.height = (startW * (img.naturalHeight / img.naturalWidth)) + 'px';
           el.innerHTML = `
-            <div class="delete-overlay-btn" style="position: absolute; top: -10px; right: -10px; background: red; color: white; border-radius: 50%; width: 20px; height: 20px; text-align: center; line-height: 20px; cursor: pointer; font-size: 12px; display: none; z-index: 100;">✕</div>
+            <div class="delete-overlay-btn" style="position: absolute; top: -10px; right: -10px; background: red; color: white; border-radius: 50%; width: 20px; height: 20px; text-align: center; line-height: 20px; cursor: pointer; font-size: 12px; display: none; z-index: 100;">âœ•</div>
             <img src="${url}" style="width: 100%; height: 100%; object-fit: contain; pointer-events: none;" />
           `;
           
@@ -366,7 +366,7 @@ document.addEventListener('DOMContentLoaded', () => {
       a.remove();
       
       showLoader(false);
-      showToast('✅ Video Rendered Successfully!');
+      showToast('âœ… Video Rendered Successfully!');
       
     } catch (error) {
       console.error(error);
@@ -537,100 +537,56 @@ document.addEventListener('DOMContentLoaded', () => {
       })
     ]
   });
-    // Draggable elements (General)
-    interact('.card-logo, .card-date, .card-badge, .card-content-area, .card-footer, .draggable-overlay')
-      .draggable({
-        inertia: true,
-        autoScroll: true,
-        listeners: {
-          move: dragMoveListener
-        }
-      });
+
+  // Draggable elements (General)
+  interact('.card-image-container, .card-logo, .card-date, .card-badge, .card-content-area, .card-footer, .draggable-overlay')
+    .draggable({
+      inertia: true,
+      autoScroll: true,
+      listeners: {
+        move: dragMoveListener
+      }
+    });
       
-    // Draggable element (Video specifically with a drag handle)
-    interact('.draggable-video')
-      .draggable({
-        inertia: true,
-        allowFrom: '.video-drag-handle',
-        autoScroll: true,
-        listeners: {
-          move: dragMoveListener
+  // Draggable element (Video specifically with a drag handle)
+  interact('.draggable-video')
+    .draggable({
+      inertia: true,
+      allowFrom: '.video-drag-handle',
+      autoScroll: true,
+      listeners: {
+        move: dragMoveListener
+      }
+    });
+
+  // Resizable elements (General)
+  interact('.card-image-container, .card-logo, .card-content-area, .card-footer')
+    .resizable({
+      edges: { left: true, right: true, bottom: true, top: true },
+      listeners: {
+        move(event) {
+          let { x, y } = event.target.dataset;
+          x = (parseFloat(x) || 0) + event.deltaRect.left;
+          y = (parseFloat(y) || 0) + event.deltaRect.top;
+
+          Object.assign(event.target.style, {
+            width: ${event.rect.width}px,
+            height: ${event.rect.height}px,
+            transform: 	ranslate(px, px)
+          });
+
+          Object.assign(event.target.dataset, { x, y });
         }
-      });
-
-    // Poster Video Wrapper (draggable + resizable with dynamic aspect ratio)
-    interact('.poster-video-wrapper')
-      .draggable({
-        inertia: true,
-        autoScroll: true,
-        modifiers: [],
-        listeners: {
-          move: dragMoveListener
-        }
-      })
-      .resizable({
-        edges: { left: true, right: true, bottom: true, top: true },
-        listeners: {
-          move: function (event) {
-            let { x, y } = event.target.dataset;
-            x = (parseFloat(x) || 0) + event.deltaRect.left;
-            y = (parseFloat(y) || 0) + event.deltaRect.top;
-
-            let width = event.rect.width;
-            let height = event.rect.height;
-
-            if (currentCardAspectRatio) {
-              height = width / currentCardAspectRatio;
-            }
-
-            Object.assign(event.target.style, {
-              width: `${width}px`,
-              height: `${height}px`,
-              transform: `translate(${x}px, ${y}px)`
-            });
-
-            Object.assign(event.target.dataset, { x, y });
-          }
-        },
-        modifiers: [
-          interact.modifiers.restrictSize({
-            min: { width: 50, height: 50 }
-          }),
-          interact.modifiers.restrictRect({
-            restriction: 'parent',
-            endOnly: false
-          })
-        ]
-      });
-
-    // Resizable elements (General - only keeping for legacy elements)
-    interact('.card-image-container, .card-logo, .card-content-area, .card-footer')
-      .resizable({
-        edges: { left: true, right: true, bottom: true, top: true },
-        listeners: {
-          move(event) {
-            let { x, y } = event.target.dataset;
-            x = (parseFloat(x) || 0) + event.deltaRect.left;
-            y = (parseFloat(y) || 0) + event.deltaRect.top;
-
-            Object.assign(event.target.style, {
-              width: `${event.rect.width}px`,
-              height: `${event.rect.height}px`,
-              transform: `translate(${x}px, ${y}px)`
-            });
-
-            Object.assign(event.target.dataset, { x, y });
-          }
-        },
-        modifiers: [
-          interact.modifiers.restrictSize({
-            min: { width: 50, height: 20 }
-          }),
-          interact.modifiers.restrictRect({
-            restriction: 'parent'
-          })
-        ]
-      });
+      },
+      modifiers: [
+        interact.modifiers.restrictSize({
+          min: { width: 50, height: 20 }
+        }),
+        interact.modifiers.restrictRect({
+          restriction: 'parent'
+        })
+      ]
+    });
   }
 
   // --- MOUSE WHEEL ZOOM FOR VIDEO AND OVERLAYS ---
@@ -729,7 +685,7 @@ document.addEventListener('DOMContentLoaded', () => {
       item.style.cssText = 'display: flex; gap: 0.3rem; align-items: center;';
       item.innerHTML = `
         <input type="text" value="${banner.text}" data-index="${index}" class="banner-text-input" style="flex: 1; padding: 4px; font-size: 0.75rem; border: 1px solid #ccc; border-radius: 3px;" />
-        <button type="button" data-delete="${banner.id}" class="btn-minimal" style="padding: 2px 6px; font-size: 0.7rem; background: #ef4444; color: white; border: none; border-radius: 3px; cursor: pointer;">✕</button>
+        <button type="button" data-delete="${banner.id}" class="btn-minimal" style="padding: 2px 6px; font-size: 0.7rem; background: #ef4444; color: white; border: none; border-radius: 3px; cursor: pointer;">âœ•</button>
       `;
       bannerList.appendChild(item);
     });
@@ -810,8 +766,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if (statusEl) statusEl.textContent = '';
 
         if (!data.success) {
-          const debugInfo = data.debug ? data.debug.join(' → ') : '';
-          throw new Error(data.error || 'Download failed' + (debugInfo ? ' — ' + debugInfo : ''));
+          const debugInfo = data.debug ? data.debug.join(' â†’ ') : '';
+          throw new Error(data.error || 'Download failed' + (debugInfo ? ' â€” ' + debugInfo : ''));
         }
 
         const downloadUrl = data.download_url || data.video_url || data.path || '';
@@ -843,7 +799,7 @@ document.addEventListener('DOMContentLoaded', () => {
           trimEndInput.value = Math.floor(cardVideo.duration);
           cardVideo.play().catch(e => console.warn("Autoplay blocked:", e));
           showLoader(false);
-          showToast('✅ Video Downloaded & Loaded!');
+          showToast('âœ… Video Downloaded & Loaded!');
           videoDlUrl.value = '';
           if (typeof window.updateLayerList === 'function') window.updateLayerList();
           if (typeof updateCardPreview === 'function') updateCardPreview();
@@ -1039,7 +995,7 @@ document.addEventListener('DOMContentLoaded', () => {
     try {
       const res = await fetchAI('hashtags', text);
       fbHashtagsOutput.value = res;
-      showToast('Hashtags Generated! #️⃣');
+      showToast('Hashtags Generated! #ï¸âƒ£');
     } catch (err) {
       alert('AI Error: ' + err.message);
     } finally {
@@ -1323,7 +1279,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (success) {
       templateNameInput.value = '';
-      showToast(`Template "${name}" Saved! 💜`);
+      showToast(`Template "${name}" Saved! ðŸ’œ`);
     } else {
       alert('Failed to save template to server. Please check file permissions.');
     }
@@ -1622,7 +1578,7 @@ setInterval(window.updateLayerList, 5000);
   saveSettingsBtn.addEventListener('click', (e) => {
     e.preventDefault();
     saveSettings();
-    showToast('All Settings Saved! 💾');
+    showToast('All Settings Saved! ðŸ’¾');
   });
 
   // Call load on start
@@ -1637,7 +1593,7 @@ setInterval(window.updateLayerList, 5000);
         mainLogo.src = event.target.result;
         updateCardPreview();
         saveSettings();
-        showToast('Logo Updated & Saved! ✅');
+        showToast('Logo Updated & Saved! âœ…');
       };
       reader.readAsDataURL(file);
       }
@@ -1803,7 +1759,7 @@ setInterval(window.updateLayerList, 5000);
           cardVideo.play().catch(e => console.warn("Autoplay blocked:", e));
           
           showLoader(false);
-          showToast('✅ Upload Completed!');
+          showToast('âœ… Upload Completed!');
           if (typeof window.updateLayerList === 'function') window.updateLayerList();
           if (typeof updateCardPreview === 'function') updateCardPreview();
         }, 300);
@@ -2007,25 +1963,25 @@ setInterval(window.updateLayerList, 5000);
   function unicodeToBamini(text) {
     if (!text) return "";
     const mapping = [
-      ["உௗ", "ஊ"], ["ஔ", "xs"], ["ஓ", "X"], ["ஒ", "x"], ["ஏ", "V"], ["எ", "v"], ["ஐ", "I"], ["ஈ", "P"], ["இ", "p"], ["ஆ", "M"], ["அ", "m"],
-      ["வெ", "nf"], ["வே", "Nf"], ["வை", "if"], ["கொ", "nfh"], ["கோ", "Nfh"], ["கௌ", "nfs"],
-      ["செ", "nr"], ["சே", "Nr"], ["சை", "ir"], ["சொ", "nrh"], ["சோ", "Nrh"], ["சௌ", "nrs"],
-      ["டெ", "nl"], ["டே", "Nl"], ["டை", "il"], ["டொ", "nlh"], ["டோ", "Nlh"], ["டௌ", "nls"],
-      ["ணெ", "nz"], ["ணே", "Nz"], ["ணை", "iz"], ["ணொ", "nzh"], ["ணோ", "Nzh"], ["ணௌ", "nzs"],
-      ["தெ", "nj"], ["தே", "Nj"], ["தை", "ij"], ["தொ", "njh"], ["தோ", "Njh"], ["தௌ", "njs"],
-      ["நெ", "ne"], ["நே", "Ne"], ["நை", "ie"], ["நொ", "neh"], ["நோ", "Neh"], ["நௌ", "nes"],
-      ["பெ", "ng"], ["பே", "Ng"], ["பை", "ig"], ["பொ", "ngh"], ["போ", "Ngh"], ["பௌ", "ngs"],
-      ["மெ", "nk"], ["மே", "Nk"], ["மை", "ik"], ["மொ", "nkh"], ["மோ", "Nkh"], ["மௌ", "nks"],
-      ["யெ", "na"], ["யே", "Na"], ["யை", "ia"], ["யொ", "nah"], ["யோ", "Nah"], ["யௌ", "nas"],
-      ["ரெ", "nu"], ["ரே", "Nu"], ["ரை", "iu"], ["ரொ", "nuh"], ["ரோ", "Nuh"], ["ரௌ", "nus"],
-      ["லெ", "ny"], ["லே", "Ny"], ["லை", "iy"], ["லொ", "nyh"], ["லோ", "Nyh"], ["லௌ", "nls"],
-      ["வெ", "nv"], ["வே", "Nv"], ["வை", "iv"], ["வொ", "nvh"], ["வோ", "Nvh"], ["வௌ", "nvs"],
-      ["ழெ", "no"], ["ழே", "No"], ["ழை", "io"], ["ழொ", "noh"], ["ழோ", "Noh"], ["ழௌ", "nos"],
-      ["ளெ", "ns"], ["ளே", "Ns"], ["ளை", "is"], ["ளொ", "nsh"], ["ளோ", "Nsh"], ["ளௌ", "nss"],
-      ["றெ", "nw"], ["றே", "Nw"], ["றை", "iw"], ["றொ", "nwh"], ["றோ", "Nwh"], ["றௌ", "nws"],
-      ["னெ", "nd"], ["னே", "Nd"], ["னை", "id"], ["நொ", "ndh"], ["நோ", "Ndh"], ["னௌ", "nds"],
-      ["கா", "fh"], ["சா", "rh"], ["ஞா", "nh"], ["டா", "lh"], ["ணா", "zh"], ["தா", "jh"], ["நா", "eh"], ["பா", "gh"], ["மா", "kh"], ["யா", "ah"], ["ரா", "uh"], ["லா", "yh"], ["வா", "vh"], ["ழா", "oh"], ["ளா", "sh"], ["றா", "wh"], ["னா", "dh"],
-      ["க்", "f;"], ["க", "f"], ["ங்", "';"], ["ங", " '"], ["ச்", "r;"], ["ச", "r"], ["ஞ்", "n;"], ["ஞ", "n"], ["ட்", "l;"], ["ட", "l"], ["ண்", "z;"], ["ண", "z"], ["த்", "j;"], ["த", "j"], ["ந்", "e;"], ["ந", "e"], ["ப்", "g;"], ["ப", "g"], ["ம்", "k;"], ["ம", "k"], ["ய்", "a;"], ["ய", "a"], ["ர்", "u;"], ["ர", "u"], ["ல்", "y;"], ["ல", "y"], ["வ்", "t;"], ["வ", "t"], ["ழ்", "o;"], ["ழ", "o"], ["ள்", "s;"], ["ள", "s"], ["ற்", "w;"], ["ற", "w"], ["ன்", "d;"], ["ன", "d"]
+      ["à®‰à¯—", "à®Š"], ["à®”", "xs"], ["à®“", "X"], ["à®’", "x"], ["à®", "V"], ["à®Ž", "v"], ["à®", "I"], ["à®ˆ", "P"], ["à®‡", "p"], ["à®†", "M"], ["à®…", "m"],
+      ["à®µà¯†", "nf"], ["à®µà¯‡", "Nf"], ["à®µà¯ˆ", "if"], ["à®•à¯Š", "nfh"], ["à®•à¯‹", "Nfh"], ["à®•à¯Œ", "nfs"],
+      ["à®šà¯†", "nr"], ["à®šà¯‡", "Nr"], ["à®šà¯ˆ", "ir"], ["à®šà¯Š", "nrh"], ["à®šà¯‹", "Nrh"], ["à®šà¯Œ", "nrs"],
+      ["à®Ÿà¯†", "nl"], ["à®Ÿà¯‡", "Nl"], ["à®Ÿà¯ˆ", "il"], ["à®Ÿà¯Š", "nlh"], ["à®Ÿà¯‹", "Nlh"], ["à®Ÿà¯Œ", "nls"],
+      ["à®£à¯†", "nz"], ["à®£à¯‡", "Nz"], ["à®£à¯ˆ", "iz"], ["à®£à¯Š", "nzh"], ["à®£à¯‹", "Nzh"], ["à®£à¯Œ", "nzs"],
+      ["à®¤à¯†", "nj"], ["à®¤à¯‡", "Nj"], ["à®¤à¯ˆ", "ij"], ["à®¤à¯Š", "njh"], ["à®¤à¯‹", "Njh"], ["à®¤à¯Œ", "njs"],
+      ["à®¨à¯†", "ne"], ["à®¨à¯‡", "Ne"], ["à®¨à¯ˆ", "ie"], ["à®¨à¯Š", "neh"], ["à®¨à¯‹", "Neh"], ["à®¨à¯Œ", "nes"],
+      ["à®ªà¯†", "ng"], ["à®ªà¯‡", "Ng"], ["à®ªà¯ˆ", "ig"], ["à®ªà¯Š", "ngh"], ["à®ªà¯‹", "Ngh"], ["à®ªà¯Œ", "ngs"],
+      ["à®®à¯†", "nk"], ["à®®à¯‡", "Nk"], ["à®®à¯ˆ", "ik"], ["à®®à¯Š", "nkh"], ["à®®à¯‹", "Nkh"], ["à®®à¯Œ", "nks"],
+      ["à®¯à¯†", "na"], ["à®¯à¯‡", "Na"], ["à®¯à¯ˆ", "ia"], ["à®¯à¯Š", "nah"], ["à®¯à¯‹", "Nah"], ["à®¯à¯Œ", "nas"],
+      ["à®°à¯†", "nu"], ["à®°à¯‡", "Nu"], ["à®°à¯ˆ", "iu"], ["à®°à¯Š", "nuh"], ["à®°à¯‹", "Nuh"], ["à®°à¯Œ", "nus"],
+      ["à®²à¯†", "ny"], ["à®²à¯‡", "Ny"], ["à®²à¯ˆ", "iy"], ["à®²à¯Š", "nyh"], ["à®²à¯‹", "Nyh"], ["à®²à¯Œ", "nls"],
+      ["à®µà¯†", "nv"], ["à®µà¯‡", "Nv"], ["à®µà¯ˆ", "iv"], ["à®µà¯Š", "nvh"], ["à®µà¯‹", "Nvh"], ["à®µà¯Œ", "nvs"],
+      ["à®´à¯†", "no"], ["à®´à¯‡", "No"], ["à®´à¯ˆ", "io"], ["à®´à¯Š", "noh"], ["à®´à¯‹", "Noh"], ["à®´à¯Œ", "nos"],
+      ["à®³à¯†", "ns"], ["à®³à¯‡", "Ns"], ["à®³à¯ˆ", "is"], ["à®³à¯Š", "nsh"], ["à®³à¯‹", "Nsh"], ["à®³à¯Œ", "nss"],
+      ["à®±à¯†", "nw"], ["à®±à¯‡", "Nw"], ["à®±à¯ˆ", "iw"], ["à®±à¯Š", "nwh"], ["à®±à¯‹", "Nwh"], ["à®±à¯Œ", "nws"],
+      ["à®©à¯†", "nd"], ["à®©à¯‡", "Nd"], ["à®©à¯ˆ", "id"], ["à®¨à¯Š", "ndh"], ["à®¨à¯‹", "Ndh"], ["à®©à¯Œ", "nds"],
+      ["à®•à®¾", "fh"], ["à®šà®¾", "rh"], ["à®žà®¾", "nh"], ["à®Ÿà®¾", "lh"], ["à®£à®¾", "zh"], ["à®¤à®¾", "jh"], ["à®¨à®¾", "eh"], ["à®ªà®¾", "gh"], ["à®®à®¾", "kh"], ["à®¯à®¾", "ah"], ["à®°à®¾", "uh"], ["à®²à®¾", "yh"], ["à®µà®¾", "vh"], ["à®´à®¾", "oh"], ["à®³à®¾", "sh"], ["à®±à®¾", "wh"], ["à®©à®¾", "dh"],
+      ["à®•à¯", "f;"], ["à®•", "f"], ["à®™à¯", "';"], ["à®™", " '"], ["à®šà¯", "r;"], ["à®š", "r"], ["à®žà¯", "n;"], ["à®ž", "n"], ["à®Ÿà¯", "l;"], ["à®Ÿ", "l"], ["à®£à¯", "z;"], ["à®£", "z"], ["à®¤à¯", "j;"], ["à®¤", "j"], ["à®¨à¯", "e;"], ["à®¨", "e"], ["à®ªà¯", "g;"], ["à®ª", "g"], ["à®®à¯", "k;"], ["à®®", "k"], ["à®¯à¯", "a;"], ["à®¯", "a"], ["à®°à¯", "u;"], ["à®°", "u"], ["à®²à¯", "y;"], ["à®²", "y"], ["à®µà¯", "t;"], ["à®µ", "t"], ["à®´à¯", "o;"], ["à®´", "o"], ["à®³à¯", "s;"], ["à®³", "s"], ["à®±à¯", "w;"], ["à®±", "w"], ["à®©à¯", "d;"], ["à®©", "d"]
     ];
     let res = text;
     mapping.forEach(([u, b]) => { res = res.split(u).join(b); });
@@ -2121,7 +2077,7 @@ setInterval(window.updateLayerList, 5000);
     e.preventDefault();
     const isHidden = monitoredSitesPanel.style.display === 'none';
     monitoredSitesPanel.style.display = isHidden ? 'block' : 'none';
-    toggleWebsitesBtn.textContent = isHidden ? '🔼 Close Manager' : '📁 Manage Monitored Sites (10)';
+    toggleWebsitesBtn.textContent = isHidden ? 'ðŸ”¼ Close Manager' : 'ðŸ“ Manage Monitored Sites (10)';
   });
 
   // Render Sites
@@ -2132,7 +2088,7 @@ setInterval(window.updateLayerList, 5000);
       div.className = 'site-item';
       div.innerHTML = `
         <span title="${site.url}"><strong>${site.name}</strong></span>
-        <span class="delete-btn" data-index="${index}">🗑️</span>
+        <span class="delete-btn" data-index="${index}">ðŸ—‘ï¸</span>
       `;
       div.querySelector('.delete-btn').addEventListener('click', () => {
         monitoredSites.splice(index, 1);
@@ -2171,7 +2127,7 @@ setInterval(window.updateLayerList, 5000);
           <div style="font-weight: 600;">${post.title}</div>
           <div style="font-size: 0.65rem; opacity: 0.7;">${post.siteName}</div>
         </div>
-        <span class="delete-btn" data-index="${index}" style="margin-left: 5px;">×</span>
+        <span class="delete-btn" data-index="${index}" style="margin-left: 5px;">Ã—</span>
       `;
       div.addEventListener('click', (e) => {
         if (e.target.classList.contains('delete-btn')) {
@@ -2272,7 +2228,7 @@ setInterval(window.updateLayerList, 5000);
 
   async function processNextInWorkflow() {
     if (currentWorkflowIndex >= workflowQueue.length) {
-      showToast('✅ Workflow Completed!');
+      showToast('âœ… Workflow Completed!');
       workflowProgress.style.display = 'none';
       currentPostName.textContent = 'None';
       return;
@@ -2313,7 +2269,7 @@ setInterval(window.updateLayerList, 5000);
       showLoader(false);
       
       isWaitingForApproval = true;
-      showToast('🎤 Say "OK" to save and continue');
+      showToast('ðŸŽ¤ Say "OK" to save and continue');
       
       // Highlight the current item in the list
       renderAutoPosts(currentWorkflowIndex);
@@ -2349,7 +2305,7 @@ setInterval(window.updateLayerList, 5000);
       
       const result = await response.json();
       if (result.success) {
-        showToast('✅ Saved Successfully!');
+        showToast('âœ… Saved Successfully!');
         
         // --- WEBHOOK TRIGGER (Option 2) ---
         const webhookUrl = webhookUrlInput.value.trim();
@@ -2370,7 +2326,7 @@ setInterval(window.updateLayerList, 5000);
                 source_url: urlInput.value
               })
             }).catch(e => console.error("Webhook error:", e));
-            showToast('🚀 Webhook Triggered!');
+            showToast('ðŸš€ Webhook Triggered!');
           } catch(e) {
             console.error("Webhook format error:", e);
           }
@@ -2406,14 +2362,14 @@ setInterval(window.updateLayerList, 5000);
     recognition.onstart = () => {
       isListening = true;
       voiceStatus.textContent = 'Listening...';
-      voiceIcon.textContent = '🛑';
+      voiceIcon.textContent = 'ðŸ›‘';
       voiceIndicator.style.display = 'block';
     };
 
     recognition.onend = () => {
       isListening = false;
       voiceStatus.textContent = 'Start Listening';
-      voiceIcon.textContent = '🎤';
+      voiceIcon.textContent = 'ðŸŽ¤';
       voiceIndicator.style.display = 'none';
       if (workflowQueue.length > 0) startListening(); // Keep listening during workflow
     };
@@ -2496,7 +2452,7 @@ setInterval(window.updateLayerList, 5000);
             <div style="font-weight: 600; font-size: 0.8rem; line-height: 1.2; color: ${index === highlightIndex ? '#8b5cf6' : 'inherit'};">${post.title}</div>
             <div style="font-size: 0.65rem; opacity: 0.7; margin-top: 2px;">${post.siteName}</div>
           </div>
-          <span class="delete-btn" data-index="${index}" style="opacity: 0.5;">×</span>
+          <span class="delete-btn" data-index="${index}" style="opacity: 0.5;">Ã—</span>
         </div>
         <button class="process-btn btn-primary" style="width: 100%; padding: 4px; font-size: 0.7rem; background: #10b981; border-radius: 4px;">OK / Process</button>
       `;
@@ -2543,7 +2499,7 @@ setInterval(window.updateLayerList, 5000);
       
       // Auto-trigger AI if needed (as per previous workflow request)
       // For now, just show the instant preview
-      showToast('✅ Postcard Design Updated! Ready for review.');
+      showToast('âœ… Postcard Design Updated! Ready for review.');
       
       // Remove from pending list after processing
       autoSavedPosts.splice(index, 1);
@@ -2596,7 +2552,7 @@ setInterval(window.updateLayerList, 5000);
               source_url: urlInput.value
             })
           });
-          showToast('🚀 Webhook Triggered Successfully!');
+          showToast('ðŸš€ Webhook Triggered Successfully!');
         } else {
           throw new Error(result.error);
         }
@@ -2620,7 +2576,7 @@ setInterval(window.updateLayerList, 5000);
     }
     isExportingVideo = true;
     downloadVideoBtn.disabled = true;
-    showToast('🎬 Starting Video Engine... Please wait.');
+    showToast('ðŸŽ¬ Starting Video Engine... Please wait.');
     await exportVideoCard(false);
     isExportingVideo = false;
     downloadVideoBtn.disabled = false;
@@ -2819,10 +2775,10 @@ setInterval(window.updateLayerList, 5000);
         }
         
         if (data.success && data.url) {
-          downloadVideoBtn.textContent = '🎬 Download Video';
+          downloadVideoBtn.textContent = 'ðŸŽ¬ Download Video';
           
           const renderTime = data.render_time ? ` (Rendered in ${data.render_time}s)` : '';
-          showToast(`✅ Video Ready!${renderTime}`);
+          showToast(`âœ… Video Ready!${renderTime}`);
           
           // Show render log if available
           if (data.log_file) {
@@ -2873,12 +2829,12 @@ setInterval(window.updateLayerList, 5000);
               document.body.removeChild(link);
               
               setTimeout(() => {
-                showToast('✅ Download Started! Check your Downloads folder.\nFile: ' + filename);
+                showToast('âœ… Download Started! Check your Downloads folder.\nFile: ' + filename);
               }, 500);
             } catch (downloadError) {
               console.error('Direct download failed:', downloadError);
               window.open(downloadUrl, '_blank');
-              showToast('⚠️ Opened in new tab. Right-click and Save As.\nFile: ' + filename);
+              showToast('âš ï¸ Opened in new tab. Right-click and Save As.\nFile: ' + filename);
             }
           }
           resolve(data.url);
@@ -2909,7 +2865,7 @@ setInterval(window.updateLayerList, 5000);
         
       } catch (e) {
         console.error('Video Export Error:', e);
-        downloadVideoBtn.textContent = '🎬 Download Video';
+        downloadVideoBtn.textContent = 'ðŸŽ¬ Download Video';
         alert('Server Export Failed: ' + e.message);
         reject(e);
       }
@@ -3437,14 +3393,14 @@ setInterval(window.updateLayerList, 5000);
       const isHidden = videoCardOverlay.style.display === 'none' || videoCardOverlay.style.display === '';
       if (isHidden) {
         videoCardOverlay.style.display = 'block';
-        togglePosterFrameBtn.textContent = '🖼️ Remove Poster Frame';
+        togglePosterFrameBtn.textContent = 'ðŸ–¼ï¸ Remove Poster Frame';
         togglePosterFrameBtn.style.background = 'rgba(16, 185, 129, 0.2)';
         togglePosterFrameBtn.style.border = '1px solid rgba(16, 185, 129, 0.5)';
         togglePosterFrameBtn.style.color = '#34d399';
         syncPostcardToVideo();
       } else {
         videoCardOverlay.style.display = 'none';
-        togglePosterFrameBtn.textContent = '🖼️ Apply Poster Frame';
+        togglePosterFrameBtn.textContent = 'ðŸ–¼ï¸ Apply Poster Frame';
         togglePosterFrameBtn.style.background = 'rgba(139, 92, 246, 0.2)';
         togglePosterFrameBtn.style.border = '1px solid rgba(139, 92, 246, 0.5)';
         togglePosterFrameBtn.style.color = '#c084fc';

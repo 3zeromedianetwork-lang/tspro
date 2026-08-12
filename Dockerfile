@@ -1,6 +1,6 @@
 FROM php:8.2-apache
 
-# Install dependencies, FFmpeg, yt-dlp, and python3 for yt-dlp
+# Install dependencies, FFmpeg, yt-dlp, and python3
 RUN apt-get update && apt-get install -y \
     ffmpeg \
     libpng-dev \
@@ -13,7 +13,7 @@ RUN apt-get update && apt-get install -y \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-install gd mysqli pdo pdo_mysql pdo_pgsql pgsql
 
-# Download linux yt-dlp binary and put it where the PHP script might find it or globally
+# Download linux yt-dlp binary
 RUN wget -O /usr/local/bin/yt-dlp https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp \
     && chmod a+rx /usr/local/bin/yt-dlp \
     && mkdir -p /var/www/html/bin \
@@ -23,9 +23,10 @@ RUN wget -O /usr/local/bin/yt-dlp https://github.com/yt-dlp/yt-dlp/releases/late
 # Enable Apache mod_rewrite
 RUN a2enmod rewrite
 
-ENV APACHE_DOCUMENT_ROOT /var/www/html
-RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-available/*.conf
-RUN sed -ri -e 's!/var/www/!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/apache2.conf /etc/apache2/conf-available/*.conf
+# Setup dynamic port configuration natively for Apache
+RUN echo "Listen \${PORT}" > /etc/apache2/ports.conf
+RUN echo "<VirtualHost *:\${PORT}>\n\tDocumentRoot /var/www/html\n\tErrorLog \${APACHE_LOG_DIR}/error.log\n\tCustomLog \${APACHE_LOG_DIR}/access.log combined\n</VirtualHost>" > /etc/apache2/sites-available/000-default.conf
+RUN echo "export PORT=\${PORT:-8080}" >> /etc/apache2/envvars
 
 # Copy application files
 COPY . /var/www/html/
@@ -50,5 +51,5 @@ RUN if [ -f "/var/www/html/api/video_config.php" ]; then \
         sed -i "s|'__DIR__ . '/../bin/yt-dlp.exe'|'yt-dlp'|g" /var/www/html/api/video_config.php || true; \
     fi
 
-# Use runtime CMD to dynamically bind to Railway's port
-CMD sed -i "s/80/$PORT/g" /etc/apache2/sites-available/000-default.conf /etc/apache2/ports.conf && docker-php-entrypoint apache2-foreground
+# Use default entrypoint, Apache handles the port natively now
+EXPOSE 8080

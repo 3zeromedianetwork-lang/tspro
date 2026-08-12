@@ -46,5 +46,10 @@ RUN if [ -f "/var/www/html/api/video_config.php" ]; then \
         sed -i "s|'__DIR__ . '/../bin/yt-dlp.exe'|'yt-dlp'|g" /var/www/html/api/video_config.php || true; \
     fi
 
-# Start Apache and substitute the dynamic PORT at runtime
-CMD sed -i "s/80/$PORT/g" /etc/apache2/sites-available/000-default.conf /etc/apache2/ports.conf && docker-php-entrypoint apache2-foreground
+# Configure Apache to use the dynamic PORT variable at runtime securely
+# We change "Listen 80" to "Listen ${PORT}" so Apache resolves it automatically
+RUN sed -i 's/Listen 80/Listen ${PORT}/g' /etc/apache2/ports.conf && \
+    sed -i 's/<VirtualHost \*:80>/<VirtualHost \*:${PORT}>/g' /etc/apache2/sites-available/000-default.conf
+
+# Start Apache
+CMD ["apache2-foreground"]

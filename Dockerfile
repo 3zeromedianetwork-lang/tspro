@@ -46,5 +46,11 @@ RUN if [ -f "/var/www/html/api/video_config.php" ]; then \
         sed -i "s|'__DIR__ . '/../bin/yt-dlp.exe'|'yt-dlp'|g" /var/www/html/api/video_config.php || true; \
     fi
 
+# Increase PHP limits for video uploading and processing
+RUN echo "upload_max_filesize = 500M" > /usr/local/etc/php/conf.d/uploads.ini && \
+    echo "post_max_size = 500M" >> /usr/local/etc/php/conf.d/uploads.ini && \
+    echo "memory_limit = 1024M" >> /usr/local/etc/php/conf.d/uploads.ini && \
+    echo "max_execution_time = 3600" >> /usr/local/etc/php/conf.d/uploads.ini
+
 # Start the PHP built-in web server! No Apache required!
 CMD sh -c "php -S 0.0.0.0:${PORT:-80} -t /var/www/html"

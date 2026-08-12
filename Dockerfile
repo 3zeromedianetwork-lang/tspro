@@ -46,10 +46,11 @@ RUN if [ -f "/var/www/html/api/video_config.php" ]; then \
         sed -i "s|'__DIR__ . '/../bin/yt-dlp.exe'|'yt-dlp'|g" /var/www/html/api/video_config.php || true; \
     fi
 
-# Configure Apache to use the dynamic PORT variable at runtime securely
-# We change "Listen 80" to "Listen ${PORT}" so Apache resolves it automatically
-RUN sed -i 's/Listen 80/Listen ${PORT}/g' /etc/apache2/ports.conf && \
-    sed -i 's/<VirtualHost \*:80>/<VirtualHost \*:${PORT}>/g' /etc/apache2/sites-available/000-default.conf
+# Fix Apache "More than one MPM loaded" error by explicitly disabling conflicting MPMs
+RUN a2dismod mpm_event mpm_worker || true; \
+    a2enmod mpm_prefork || true
 
-# Start Apache
-CMD ["apache2-foreground"]
+# Safe start command that sets the Railway PORT right before launching Apache
+CMD sed -i "s/Listen 80/Listen ${PORT:-80}/g" /etc/apache2/ports.conf && \
+    sed -i "s/:80/:${PORT:-80}/g" /etc/apache2/sites-available/000-default.conf && \
+    apache2-foreground

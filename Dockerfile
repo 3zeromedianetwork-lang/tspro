@@ -1,39 +1,33 @@
-FROM debian:bookworm-slim
+FROM php:8.2-cli
 
 ENV DEBIAN_FRONTEND=noninteractive
 
-# Install standard Apache, PHP 8.2, and dependencies
+# Install dependencies for PHP extensions and yt-dlp
 RUN apt-get update && apt-get install -y \
-    apache2 \
-    php \
-    libapache2-mod-php \
-    php-cli \
-    php-gd \
-    php-mysql \
-    php-pgsql \
-    php-curl \
     ffmpeg \
+    libpng-dev \
+    libjpeg-dev \
+    libfreetype6-dev \
+    libpq-dev \
     wget \
     python3 \
     python3-pip \
-    && rm -rf /var/lib/apt/lists/*
+    && rm -rf /var/lib/apt/lists/* \
+    && docker-php-ext-configure gd --with-freetype --with-jpeg \
+    && docker-php-ext-install gd mysqli pdo pdo_mysql pdo_pgsql pgsql
 
-# Download linux yt-dlp binary
+# Download yt-dlp
 RUN wget -O /usr/local/bin/yt-dlp https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp \
     && chmod a+rx /usr/local/bin/yt-dlp \
     && mkdir -p /var/www/html/bin \
     && cp /usr/local/bin/yt-dlp /var/www/html/bin/yt-dlp \
     && touch /var/www/html/bin/yt-dlp.exe
 
-RUN a2enmod rewrite
-
-# Setup port mapping for Railway
-RUN sed -i 's/80/${PORT:-80}/g' /etc/apache2/sites-available/000-default.conf /etc/apache2/ports.conf
-
-# Copy application files
+# Add our code
 COPY . /var/www/html/
+WORKDIR /var/www/html
 
-# Create required directories and set permissions
+# Fix permissions
 RUN mkdir -p /var/www/html/uploads \
     /var/www/html/temp \
     /var/www/html/temp_extract \
@@ -48,19 +42,9 @@ RUN mkdir -p /var/www/html/uploads \
     && chmod -R 777 /var/www/html/video_data \
     && chmod -R 777 /var/www/html/bin
 
-# Fix yt-dlp path in video_config.php if it exists
 RUN if [ -f "/var/www/html/api/video_config.php" ]; then \
         sed -i "s|'__DIR__ . '/../bin/yt-dlp.exe'|'yt-dlp'|g" /var/www/html/api/video_config.php || true; \
     fi
 
-# Setup Apache environment variables
-ENV APACHE_RUN_USER=www-data
-ENV APACHE_RUN_GROUP=www-data
-ENV APACHE_LOG_DIR=/var/log/apache2
-ENV APACHE_RUN_DIR=/var/run/apache2
-ENV APACHE_PID_FILE=/var/run/apache2/apache2.pid
-
-RUN mkdir -p /var/run/apache2
-
-# Start Apache directly
-CMD ["/usr/sbin/apache2", "-D", "FOREGROUND"]
+# Start the PHP built-in web server! No Apache required!
+CMD sh -c "php -S 0.0.0.0:${PORT:-80} -t /var/www/html"

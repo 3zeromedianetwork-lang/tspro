@@ -46,11 +46,11 @@ RUN if [ -f "/var/www/html/api/video_config.php" ]; then \
         sed -i "s|'__DIR__ . '/../bin/yt-dlp.exe'|'yt-dlp'|g" /var/www/html/api/video_config.php || true; \
     fi
 
-# Fix Apache "More than one MPM loaded" error by explicitly disabling conflicting MPMs
-RUN a2dismod mpm_event mpm_worker || true; \
-    a2enmod mpm_prefork || true
+# Definitively fix "More than one MPM loaded" by deleting all other MPMs
+RUN rm -f /etc/apache2/mods-enabled/mpm_event.load /etc/apache2/mods-enabled/mpm_worker.load \
+          /etc/apache2/mods-available/mpm_event.load /etc/apache2/mods-available/mpm_worker.load
 
-# Safe start command that sets the Railway PORT right before launching Apache
-CMD sed -i "s/Listen 80/Listen ${PORT:-80}/g" /etc/apache2/ports.conf && \
-    sed -i "s/:80/:${PORT:-80}/g" /etc/apache2/sites-available/000-default.conf && \
+# Safe start command that completely regenerates the port config to avoid any loops
+CMD echo "Listen ${PORT:-80}" > /etc/apache2/ports.conf && \
+    echo "<VirtualHost *:${PORT:-80}>\n\tDocumentRoot /var/www/html\n\tErrorLog \${APACHE_LOG_DIR}/error.log\n\tCustomLog \${APACHE_LOG_DIR}/access.log combined\n</VirtualHost>" > /etc/apache2/sites-available/000-default.conf && \
     apache2-foreground

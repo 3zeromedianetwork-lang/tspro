@@ -2687,14 +2687,14 @@ setInterval(window.updateLayerList, 5000);
 
     return new Promise(async (resolve, reject) => {
       try {
-        downloadVideoBtn.textContent = '?? Generating Design...';
+        downloadVideoBtn.textContent = '⏳ Generating Design...';
         
         console.log('Starting export process...');
         const overlayResult = await generateDesignOverlay();
         const overlayData = overlayResult.main.toDataURL('image/png');
         const logoDateData = overlayResult.logoDate ? overlayResult.logoDate.toDataURL('image/png') : null;
         
-        downloadVideoBtn.textContent = '?? Rendering Video (Server)...';
+        downloadVideoBtn.textContent = '⚙️ Rendering Video (Server)...';
         
         const videoSrcUrl = new URL(cardVideo.src);
         let videoId = videoSrcUrl.pathname.split('/').pop().replace('.mp4', '');
@@ -2706,18 +2706,18 @@ setInterval(window.updateLayerList, 5000);
         const boxHeightRatio = imageBox.offsetHeight / newsCard.offsetHeight;
 
         let videoTransform = { x: 0, y: 0, scaleW: 1, scaleH: 1 };
-        if (posterVideoWrapper && posterVideoWrapper.style.display !== 'none') {
-          const wrapperRect = posterVideoWrapper.getBoundingClientRect();
-          const boxRect = imageBox.getBoundingClientRect();
-          videoTransform = {
-            scaleW: wrapperRect.width / boxRect.width,
-            scaleH: wrapperRect.height / boxRect.height,
-            x: (wrapperRect.left - boxRect.left) / boxRect.width,
-            y: (wrapperRect.top - boxRect.top) / boxRect.height
-          };
-        }
-
-        const requestBody = {
+          if (imageBox && imageBox.style.display !== 'none') {
+            const cardRect = newsCard.getBoundingClientRect();
+            const boxRect = imageBox.getBoundingClientRect();
+            videoTransform = {
+              scaleW: boxRect.width / cardRect.width,
+              scaleH: boxRect.height / cardRect.height,
+              x: (boxRect.left - cardRect.left) / cardRect.width,
+              y: (boxRect.top - cardRect.top) / cardRect.height
+            };
+          }
+          
+          const requestBody = {
           videoId: videoId,
           overlayData: overlayData,
           trimStart: startTime,

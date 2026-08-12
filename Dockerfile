@@ -23,11 +23,6 @@ RUN wget -O /usr/local/bin/yt-dlp https://github.com/yt-dlp/yt-dlp/releases/late
 # Enable Apache mod_rewrite
 RUN a2enmod rewrite
 
-# Setup dynamic port configuration natively for Apache
-RUN echo "Listen \${PORT}" > /etc/apache2/ports.conf
-RUN echo "<VirtualHost *:\${PORT}>\n\tDocumentRoot /var/www/html\n\tErrorLog \${APACHE_LOG_DIR}/error.log\n\tCustomLog \${APACHE_LOG_DIR}/access.log combined\n</VirtualHost>" > /etc/apache2/sites-available/000-default.conf
-RUN echo "export PORT=\${PORT:-8080}" >> /etc/apache2/envvars
-
 # Copy application files
 COPY . /var/www/html/
 
@@ -51,5 +46,5 @@ RUN if [ -f "/var/www/html/api/video_config.php" ]; then \
         sed -i "s|'__DIR__ . '/../bin/yt-dlp.exe'|'yt-dlp'|g" /var/www/html/api/video_config.php || true; \
     fi
 
-# Use default entrypoint, Apache handles the port natively now
-EXPOSE 8080
+# Start Apache and substitute the dynamic PORT at runtime
+CMD sed -i "s/80/$PORT/g" /etc/apache2/sites-available/000-default.conf /etc/apache2/ports.conf && docker-php-entrypoint apache2-foreground

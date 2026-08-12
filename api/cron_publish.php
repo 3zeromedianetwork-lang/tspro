@@ -19,6 +19,13 @@ $remaining_posts = $posts; // Keep track of posts that haven't been processed
 $published_count = 0;
 $errors = [];
 
+$log_file = __DIR__ . '/cron_log.txt';
+function log_cron($msg) {
+    global $log_file;
+    file_put_contents($log_file, date('Y-m-d H:i:s') . " - " . print_r($msg, true) . "\n", FILE_APPEND);
+}
+log_cron("Cron Started. Remaining posts: " . count($remaining_posts));
+
 $now = time();
 
 foreach ($posts as $index => $post) {
@@ -84,7 +91,8 @@ foreach ($posts as $index => $post) {
                 $error_msg = is_array($response) && isset($response['error']) ? $response['error']['message'] : $raw_response;
                 $errors[] = ['post_id' => $post['id'], 'error' => $error_msg, 'http_code' => $http_code, 'full_response' => $response];
             }
-} else if ($media_type === 'link') {
+        } else if ($media_type === 'link') {
+            log_cron("Processing Link Post for ID: " . $post['id'] . " to page " . $post['page_id']);
             $post_url = "https://graph.facebook.com/v20.0/{$post['page_id']}/feed";
             $post_data = [
                 'message' => $post['message'],
@@ -105,15 +113,20 @@ foreach ($posts as $index => $post) {
             curl_close($ch);
             
             if ($curl_error) {
+                log_cron("CURL Error: $curl_error");
                 $errors[] = ['post_id' => $post['id'], 'error' => 'CURL error: ' . $curl_error, 'http_code' => $http_code];
                 continue;
             }
             
             $response = json_decode($raw_response, true);
+            log_cron("FB API Response for Link: " . $raw_response);
+            
             if ($http_code === 200 && isset($response['id'])) {
+                log_cron("Link post success: " . $response['id']);
                 $published_count++;
             } else {
                 $error_msg = is_array($response) && isset($response['error']) ? $response['error']['message'] : $raw_response;
+                log_cron("Link post failed: $error_msg");
                 $errors[] = ['post_id' => $post['id'], 'error' => $error_msg, 'http_code' => $http_code, 'full_response' => $response];
             }
         } else {
